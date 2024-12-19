@@ -1,58 +1,50 @@
 package main
 
 import (
-	c_order "client/makeOrder"
-	"encoding/json"
+	"db"
 	"fmt"
+	"log"
+	"server/order"
 )
 
 func main() {
-	orderInfo, err := c_order.MakeOrder()
+	if err := db.InitDB(db.Host, db.Port, db.User, db.Password, db.Name); err != nil {
+		log.Fatal(err)
+	}
+
+	defer func() {
+		if err := db.Close(); err != nil {
+			log.Fatal(err)
+		}
+	}()
+
+	orderData, err := order.LoadFromFile("order1.json")
 	if err != nil {
-		fmt.Println("Ошибка при передаче данных:", err)
+		log.Println(err)
 		return
 	}
 
-	order, err := Parse(orderInfo)
+	order, err := order.ParseOrder(orderData)
 	if err != nil {
-		fmt.Println("Ошибка при парсинге:", err)
+		log.Println(err)
 		return
 	}
 
-	orderJSON, _ := json.MarshalIndent(order, "", "   ")
-	fmt.Println(string(orderJSON))
+	fmt.Println(string(order))
+
 }
 
-var id int
+// logFile, err := os.OpenFile("app.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+// if err != nil {
+// 	fmt.Println("Ошибка при открытии файла логов:", err)
+// 	return
+// }
+// defer logFile.Close()
+// log.SetOutput(logFile)
 
-type Order struct {
-	ID         int               `json:"orderID"`
-	List       []c_order.Bouquet `json:"bouquetsList"`
-	TotalPrice int               `json:"orderPrice"`
-}
-
-func Parse(data []byte) (Order, error) {
-	id = newID()
-
-	var bouquets c_order.Bouquets
-	if err := json.Unmarshal(data, &bouquets); err != nil {
-		return Order{}, err
-	}
-
-	var totalPrice int
-	for _, bouquet := range bouquets.List {
-		totalPrice += bouquet.Price
-	}
-
-	order := Order{
-		ID:         id,
-		List:       bouquets.List,
-		TotalPrice: totalPrice,
-	}
-	return order, nil
-}
-
-func newID() int {
-	id++
-	return id
-}
+// orderInfo, err := c_order.MakeOrder()
+// if err != nil {
+// 	log.Println("Ошибка при передаче данных:", err)
+// 	return
+// }
+// fmt.Println(string(orderInfo))

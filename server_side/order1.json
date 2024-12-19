@@ -1,0 +1,48 @@
+[
+    {
+        "position": 1,
+        "bouquet": [
+            {
+                "name": "Роза",
+                "color": "Жёлтая",
+                "quantity": 11
+            },
+            {
+                "name": "Лилия",
+                "color": "Жёлтая",
+                "quantity": 5
+            }
+        ],
+        "decoration": {
+            "postcard": {
+                "message": "С 8 марта!"
+            },
+            "pack": {
+                "material": "Крафт"
+            }
+        }
+    },
+    {
+        "position": 2,
+        "bouquet": [
+            {
+                "name": "Ромашка",
+                "color": "Белая",
+                "quantity": 50
+            },
+            {
+                "name": "Пион",
+                "color": "Белый",
+                "quantity": 5
+            }
+        ],
+        "decoration": {
+            "postcard": {
+                "message": "С Днём Влюбленных!"
+            },
+            "pack": {
+                "material": "Лента"
+            }
+        }
+    }
+]
