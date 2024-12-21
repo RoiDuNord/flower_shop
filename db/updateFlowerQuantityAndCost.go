@@ -22,13 +22,16 @@ func UpdateQuantityAndCost(flowerName, flowerColor string, requestedQuantity int
 	return quantity, totalCost, err
 }
 
-func getQtyAndPrice(flowerName, flowerColor string) (availableQuantity, price int, err error) {
-	getQtyAndPriceQuery := `
-		SELECT quantity, price
+func getQtyAndPrice(flowerName, flowerColor string) (int, int, error) {
+	if db == nil {
+		return 0, 0, fmt.Errorf("база данных не инициализирована")
+	}
+
+	var availableQuantity, price int
+	getQtyAndPriceQuery := `SELECT quantity, price
 		FROM flowers
-		WHERE name = $1 AND color = $2
-	`
-	if err = db.QueryRow(getQtyAndPriceQuery, flowerName, flowerColor).Scan(&availableQuantity, &price); err != nil {
+		WHERE name = \$1 AND color = \$2`
+	if err := db.QueryRow(getQtyAndPriceQuery, flowerName, flowerColor).Scan(&availableQuantity, &price); err != nil {
 		return 0, 0, fmt.Errorf("не удалось получить данные для '%s %s': %w", flowerName, flowerColor, err)
 	}
 	return availableQuantity, price, nil
