@@ -8,15 +8,9 @@ import (
 )
 
 func main() {
-	if err := db.InitDB(db.Host, db.Port, db.User, db.Password, db.Name); err != nil {
+	if err := db.InitDB(); err != nil {
 		log.Fatal(err)
 	}
-
-	defer func() {
-		if err := db.Close(); err != nil {
-			log.Fatal(err)
-		}
-	}()
 
 	orderData, err := order.LoadFromFile("order1.json")
 	if err != nil {
