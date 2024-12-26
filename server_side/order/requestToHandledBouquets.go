@@ -1,20 +1,25 @@
 package order
 
 import (
-	"db"
 	"encoding/json"
 	"fmt"
 	"log"
-	"models"
+
+	"server/db"
+	"server/models"
 )
 
-func handleBouquetsRequest(orderData []byte) ([]byte, error) {
+type DBWrapper struct {
+	*db.Database
+}
+
+func (db *DBWrapper) handleBouquetsRequest(orderData []byte) ([]byte, error) {
 	bouquets, err := parseBouquets(orderData)
 	if err != nil {
 		return nil, err
 	}
 
-	checkedBouquets, err := updateBouquets(bouquets)
+	checkedBouquets, err := db.updateBouquets(bouquets)
 	if err != nil {
 		return nil, err
 	}
@@ -39,14 +44,14 @@ func parseBouquets(orderData []byte) ([]models.Bouquet, error) {
 	return bouquets, nil
 }
 
-func updateBouquets(bouquets []models.Bouquet) ([]models.Bouquet, error) {
+func (db *DBWrapper) updateBouquets(bouquets []models.Bouquet) ([]models.Bouquet, error) {
 	for i := range bouquets {
 		bouquet := &bouquets[i]
 		var totalCost int
 
 		for j := range bouquet.Flowers {
 			flower := &bouquet.Flowers[j]
-			handledFlower, err := validateQuantityAndCost(flower)
+			handledFlower, err := db.validateQuantityAndCost(flower)
 			if err != nil {
 				log.Println(err)
 			}
@@ -57,7 +62,7 @@ func updateBouquets(bouquets []models.Bouquet) ([]models.Bouquet, error) {
 			fmt.Printf("Обновлено: %s - Количество: %d, Стоимость: %d, Общая стоимость: %d\n", flower.Name, flower.Quantity, flower.Cost, totalCost)
 		}
 
-		decorationCost, err := decorationCost(bouquet)
+		decorationCost, err := db.decorationCost(bouquet)
 		if err != nil {
 			log.Println(err)
 			continue
@@ -68,8 +73,8 @@ func updateBouquets(bouquets []models.Bouquet) ([]models.Bouquet, error) {
 	return bouquets, nil
 }
 
-func decorationCost(bouquet *models.Bouquet) (int, error) {
-	postcardPrice, packPrice, err := db.UpdateDecorationCost(bouquet.Decoration)
+func (db *DBWrapper) decorationCost(bouquet *models.Bouquet) (int, error) {
+	postcardPrice, packPrice, err := db.GetDecorationCost(bouquet.Decoration)
 	if err != nil {
 		return 0, err
 	}
@@ -79,7 +84,7 @@ func decorationCost(bouquet *models.Bouquet) (int, error) {
 	return bouquet.Decoration.Cost, nil
 }
 
-func validateQuantityAndCost(flower *models.Flower) (*models.Flower, error) {
+func (db *DBWrapper) validateQuantityAndCost(flower *models.Flower) (*models.Flower, error) {
 	fullFlowerName := fmt.Sprintf("%s %s", flower.Name, flower.Color)
 
 	availQty, cost, err := db.UpdateQuantityAndCost(flower.Name, flower.Color, flower.Quantity)

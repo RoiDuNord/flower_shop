@@ -2,11 +2,11 @@ package order
 
 import (
 	"encoding/json"
-	"models"
+	"server/models"
 )
 
-func ParseOrder(rawOrder []byte) ([]byte, error) {
-	checkedOrder, err := handleBouquetsRequest(rawOrder)
+func (db *DBWrapper) ParseOrder(rawOrder []byte) ([]byte, error) {
+	checkedOrder, err := db.handleBouquetsRequest(rawOrder)
 	if err != nil {
 		return nil, err
 	}
