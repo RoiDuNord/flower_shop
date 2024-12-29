@@ -16,7 +16,7 @@ type UpdaterDB interface {
 	UpdateDecorationCost() error
 }
 
-func NewDB(params []string) (*Database, error) {
+func InitDB(params []string) (*Database, error) {
 
 	host, port, user, password, dbname, sslmode := params[0], params[1], params[2], params[3], params[4], params[5]
 

@@ -11,13 +11,13 @@ const (
 	PackColumn     = "material"
 )
 
-func (db *DBWrapper) GetDecorationCost(decor models.Decoration) (int, int, error) {
-	postcardPrice, err := db.GetDecorElPrice(PostcardTable, PostcardColumn, decor.Postcard.Message)
+func (om *OrderManager) GetDecorationCost(decor models.Decoration) (int, int, error) {
+	postcardPrice, err := om.Db.GetDecorElPrice(PostcardTable, PostcardColumn, decor.Postcard.Message)
 	if err != nil {
 		return 0, 0, err
 	}
 
-	packPrice, err := db.GetDecorElPrice(PackTable, PackColumn, decor.Pack.Material)
+	packPrice, err := om.Db.GetDecorElPrice(PackTable, PackColumn, decor.Pack.Material)
 	if err != nil {
 		return 0, 0, err
 	}

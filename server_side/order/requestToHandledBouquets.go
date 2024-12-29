@@ -9,23 +9,19 @@ import (
 	"server/models"
 )
 
-type DBWrapper struct {
-	*db.Database
+type OrderManager struct {
+	Db *db.Database
 }
 
-func (db *DBWrapper) handleBouquetsRequest(orderData []byte) ([]byte, error) {
+func (om *OrderManager) handleBouquetsRequest(orderData []byte) ([]byte, error) {
 	bouquets, err := parseBouquets(orderData)
 	if err != nil {
 		return nil, err
 	}
 
-	checkedBouquets, err := db.updateBouquets(bouquets)
+	checkedBouquets, err := om.updateBouquets(bouquets)
 	if err != nil {
 		return nil, err
-	}
-
-	for _, cal := range checkedBouquets {
-		fmt.Println(cal)
 	}
 
 	handledOrder, err := json.MarshalIndent(checkedBouquets, "", "   ")
@@ -44,53 +40,67 @@ func parseBouquets(orderData []byte) ([]models.Bouquet, error) {
 	return bouquets, nil
 }
 
-func (db *DBWrapper) updateBouquets(bouquets []models.Bouquet) ([]models.Bouquet, error) {
+func (om *OrderManager) updateBouquets(bouquets []models.Bouquet) ([]models.Bouquet, error) {
 	for i := range bouquets {
 		bouquet := &bouquets[i]
-		var totalCost int
 
 		for j := range bouquet.Flowers {
 			flower := &bouquet.Flowers[j]
-			handledFlower, err := db.validateQuantityAndCost(flower)
-			if err != nil {
-				log.Println(err)
+			if err := om.validateFlowersQtyAndCost(flower, &bouquet.Cost); err != nil {
+				log.Printf("Ошибка при валидации цветка %s: %v", flower.Name, err)
 			}
-
-			flower.Cost = handledFlower.Cost
-			flower.Quantity = handledFlower.Quantity
-			totalCost += flower.Cost
-			fmt.Printf("Обновлено: %s - Количество: %d, Стоимость: %d, Общая стоимость: %d\n", flower.Name, flower.Quantity, flower.Cost, totalCost)
+			log.Println(flower)
+			fmt.Printf("Обновлено: %s - Количество: %d, Стоимость: %d, Общая стоимость: %d\n", flower.Name, flower.Quantity, flower.Cost, bouquet.Cost)
 		}
 
-		decorationCost, err := db.decorationCost(bouquet)
-		if err != nil {
-			log.Println(err)
-			continue
+		if err := om.decorationCost(bouquet, &bouquet.Cost); err != nil {
+			log.Printf("Ошибка при обновлении стоимости дополнений для букета: %v", err)
 		}
-		totalCost += decorationCost
-		bouquet.Cost = totalCost
 	}
+
 	return bouquets, nil
 }
 
-func (db *DBWrapper) decorationCost(bouquet *models.Bouquet) (int, error) {
-	postcardPrice, packPrice, err := db.GetDecorationCost(bouquet.Decoration)
+func (om *OrderManager) decorationCost(bouquet *models.Bouquet, totalCost *int) error {
+	postcardPrice, packPrice, err := om.GetDecorationCost(bouquet.Decoration)
 	if err != nil {
-		return 0, err
+		return err
 	}
 	bouquet.Decoration.Postcard.Price = postcardPrice
 	bouquet.Decoration.Pack.Price = packPrice
 	bouquet.Decoration.Cost = postcardPrice + packPrice
-	return bouquet.Decoration.Cost, nil
+
+	updateTotalCost(totalCost, bouquet.Decoration.Cost)
+
+	return nil
 }
 
-func (db *DBWrapper) validateQuantityAndCost(flower *models.Flower) (*models.Flower, error) {
+func (om *OrderManager) validateFlowersQtyAndCost(flower *models.Flower, totalCost *int) error {
+	if err := om.GetFlowerAvailQtyAndCost(flower); err != nil {
+		return err
+	}
+
 	fullFlowerName := fmt.Sprintf("%s %s", flower.Name, flower.Color)
+	log.Printf("Количество для %s обновлено на %d", fullFlowerName, flower.Quantity)
 
-	availQty, cost, err := db.UpdateQuantityAndCost(flower.Name, flower.Color, flower.Quantity)
-	log.Printf("Количество для %s обновлено на %d", fullFlowerName, availQty)
+	log.Printf("Qty: %d, C: %d", flower.Quantity, flower.Cost)
 
-	flower.Cost, flower.Quantity = cost, availQty
+	updateTotalCost(totalCost, flower.Cost)
 
-	return flower, err
+	return nil
 }
+
+func updateTotalCost(totalCost *int, amount int) {
+	*totalCost += amount
+}
+
+// func (db *OrderManager) validateQuantityAndCost(flower *models.Flower) (*models.Flower, error) {
+// 	fullFlowerName := fmt.Sprintf("%s %s", flower.Name, flower.Color)
+
+// 	availQty, cost, err := db.GetFlowerAvailQtyAndCost(flower.Name, flower.Color, flower.Quantity)
+// 	log.Printf("Количество для %s обновлено на %d", fullFlowerName, availQty)
+
+// 	flower.Cost, flower.Quantity = cost, availQty
+
+// 	return flower, err
+// }

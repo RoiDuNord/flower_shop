@@ -4,7 +4,7 @@ import (
 	"fmt"
 )
 
-func (d *Database) GetFlowersQtyAndPrice(flowerName, flowerColor string) (int, int, error) {
+func (d *Database) GetFlowerQtyAndPrice(flowerName, flowerColor string) (int, int, error) {
 	var availableQuantity, price int
 	getQtyAndPriceQuery := `SELECT quantity, price
 		FROM flowers

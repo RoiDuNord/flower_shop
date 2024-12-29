@@ -2,31 +2,32 @@ package order
 
 import (
 	"fmt"
+	"log"
+	"server/models"
 )
 
-func (db *DBWrapper) UpdateQuantityAndCost(flowerName, flowerColor string, requestedQuantity int) (int, int, error) {
-	flower := fmt.Sprintf("%s %s", flowerName, flowerColor)
-
-	availableQuantity, price, err := db.GetFlowersQtyAndPrice(flowerName, flowerColor)
+func (om *OrderManager) GetFlowerAvailQtyAndCost(flower *models.Flower) error {
+	availQty, price, err := om.Db.GetFlowerQtyAndPrice(flower.Name, flower.Color)
 	if err != nil {
-		return 0, 0, err
+		return err
 	}
 
-	quantity, err := validateQuantity(requestedQuantity, availableQuantity, flower)
+	validateQuantity(flower, availQty)
 
-	if err := db.UpdateQuantity(quantity, flowerName, flowerColor); err != nil {
-		return 0, 0, fmt.Errorf("не удалось обновить количество для '%s': %w", flower, err)
+	if err := om.Db.UpdateQty(flower.Quantity, flower.Name, flower.Color); err != nil {
+		return fmt.Errorf("не удалось обновить количество для '%s': %w", flower.Name+" "+flower.Color, err)
 	}
 
-	totalCost := price * quantity
-	return quantity, totalCost, err
+	flower.Cost = price * flower.Quantity
+	log.Println(flower.Cost)
+	return err
 }
 
-func validateQuantity(requestedQuantity, availableQuantity int, flower string) (int, error) {
-	if requestedQuantity > availableQuantity {
-		return availableQuantity, fmt.Errorf("Максимум %d для %s", availableQuantity, flower)
+func validateQuantity(flower *models.Flower, availableQuantity int) {
+	if flower.Quantity > availableQuantity {
+		flower.Quantity = availableQuantity
+		flower.ErrorMessage = fmt.Sprintf("доступно %d шт.", availableQuantity)
 	}
-	return requestedQuantity, nil
 }
 
 // if requestedQuantity > availableQuantity {

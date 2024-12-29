@@ -5,8 +5,8 @@ import (
 	"server/models"
 )
 
-func (db *DBWrapper) ParseOrder(rawOrder []byte) ([]byte, error) {
-	checkedOrder, err := db.handleBouquetsRequest(rawOrder)
+func (om *OrderManager) ParseOrder(rawOrder []byte) ([]byte, error) {
+	checkedOrder, err := om.handleBouquetsRequest(rawOrder)
 	if err != nil {
 		return nil, err
 	}

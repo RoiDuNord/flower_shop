@@ -4,7 +4,7 @@ import (
 	"fmt"
 )
 
-func (d *Database) UpdateQuantity(quantity int, flowerName, flowerColor string) error {
+func (d *Database) UpdateQty(quantity int, flowerName, flowerColor string) error {
 	query := `UPDATE flowers 
 		SET quantity = quantity - $1 
 		WHERE name = $2 AND color = $3`
