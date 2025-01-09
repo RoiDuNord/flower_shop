@@ -1,41 +1,22 @@
 package main
 
 import (
-	"fmt"
 	"log"
-	"server/db"
-	"server/order"
+	"server/config"
 	"server/server"
 )
 
 func main() {
-	params, err := server.GetDBParams()
+	cfg, err := config.ParseConfig()
 	if err != nil {
-		log.Println("ошибка получения параметров БД: %w", err)
+		log.Fatalf("Error parsing config: %v", err)
 	}
 
-	db, err := db.InitDB(params)
-	if err != nil {
-		log.Fatal(err)
-		return
-	}
-	defer db.Close()
-
-	// bl - это суть работы сервера
-	orderData, err := server.LoadFromFile("order1.json")
-	if err != nil {
-		log.Println(err)
-		return
+	if cfg == (config.Config{}) {
+		log.Fatal("Empty config")
 	}
 
-	om := order.OrderManager{Db: db}
-	order, err := om.ParseOrder(orderData)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-
-	fmt.Println(string(order))
+	server.Run(cfg)
 }
 
 // logFile, err := os.OpenFile("app.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)

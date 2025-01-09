@@ -11,13 +11,12 @@ type Database struct {
 	db *sql.DB
 }
 
-type UpdaterDB interface {
-	UpdateQuantityAndCost() error
-	UpdateDecorationCost() error
-}
+// type UpdaterDB interface {
+// 	UpdateQuantityAndCost() error
+// 	UpdateDecorationCost() error
+// } куда можно?
 
-func InitDB(params []string) (*Database, error) {
-
+func Init(params []string) (*Database, error) {
 	host, port, user, password, dbname, sslmode := params[0], params[1], params[2], params[3], params[4], params[5]
 
 	psqlInfo := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",

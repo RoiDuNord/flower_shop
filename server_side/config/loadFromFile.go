@@ -6,6 +6,11 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+type Config struct {
+	Port     int    `json:"port"`
+	LogLevel string `json:"logLevel"`
+}
+
 func loadFromFile(fileName string) (Config, error) {
 	data, err := os.ReadFile(fileName)
 	if err != nil {

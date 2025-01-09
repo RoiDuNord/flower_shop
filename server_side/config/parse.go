@@ -1,6 +1,6 @@
 package config
 
-func Parse() (Config, error) {
+func ParseConfig() (Config, error) {
 	cfg, err := loadFromFile("config.yaml")
 	if err != nil {
 		return Config{}, err

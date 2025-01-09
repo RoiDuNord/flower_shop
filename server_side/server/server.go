@@ -3,36 +3,64 @@ package server
 import (
 	"fmt"
 	"log"
-	"os"
+	"net/http"
+	"server/config"
+	"server/db"
 
-	"github.com/joho/godotenv"
+	"github.com/go-chi/chi"
 )
 
-func LoadFromFile(file string) ([]byte, error) {
-	orderData, err := os.ReadFile(file)
-	if err != nil {
-		log.Println("Ошибка при чтении информации о заказе:", err)
-		return nil, err
-	}
-	return orderData, nil
+type Server struct {
+	db *db.Database
 }
 
-func GetDBParams() ([]string, error) {
-	myEnv, err := godotenv.Read()
+func Run(cfg config.Config) error {
+	router := chi.NewRouter()
+
+	s, err := NewServer()
 	if err != nil {
-		return nil, fmt.Errorf("ошибка чтения переменных окружения: %w", err)
+		log.Println(err)
+		return err
 	}
 
-	requiredKeys := []string{"HOST", "PORT", "USER", "PASSWORD", "NAME", "SSLMODE"}
-	params := make([]string, 0, len(requiredKeys))
+	fmt.Println(s)
 
-	for _, key := range requiredKeys {
-		if value, exists := myEnv[key]; !exists || value == "" {
-			return nil, fmt.Errorf("не установлено значение для переменной окружения: %s", key)
-		} else {
-			params = append(params, value)
-		}
+	// router.Get("/admin/info", s.InfoHandler)
+
+	log.Printf("Starting HTTP server on port %d", cfg.Port)
+	if err := http.ListenAndServe(fmt.Sprintf(":%d", cfg.Port), router); err != nil {
+		log.Fatalf("Error starting HTTP server: %v", err)
 	}
 
-	return params, nil
+	return nil
+}
+
+func NewDB() (*db.Database, error) {
+	dbParams, err := config.GetDBParams()
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+
+	database, err := db.Init(dbParams)
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+
+	return database, nil
+}
+
+func NewServer() (*Server, error) {
+	database, err := NewDB()
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+
+	s := &Server{
+		db: database,
+	}
+
+	return s, nil
 }
