@@ -3,6 +3,7 @@ package db
 import (
 	"database/sql"
 	"fmt"
+	"log/slog"
 
 	_ "github.com/lib/pq"
 )
@@ -24,21 +25,21 @@ func Init(params []string) (*Database, error) {
 
 	db, err := sql.Open("postgres", psqlInfo)
 	if err != nil {
-		return nil, fmt.Errorf("ошибка при открытии базы данных: %w", err)
+		return nil, fmt.Errorf("error opening database: %w", err)
 	}
 
 	if err = db.Ping(); err != nil {
-		return nil, fmt.Errorf("ошибка при подключении к БД: %w", err)
+		return nil, fmt.Errorf("error connecting to the database: %w", err)
 	}
 
-	fmt.Println("Успешное подключение к БД!")
+	slog.Info("successfully connected to the database!")
 
 	return &Database{db: db}, nil
 }
 
 func (d *Database) Close() error {
 	if err := d.db.Close(); err != nil {
-		return fmt.Errorf("ошибка при закрытии базы данных: %w", err)
+		return fmt.Errorf("error closing database: %w", err)
 	}
 	return nil
 }

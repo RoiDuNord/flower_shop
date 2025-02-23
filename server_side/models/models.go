@@ -31,8 +31,15 @@ type Bouquet struct {
 	Cost       int        `json:"bouquetCost"`
 }
 
+type Payment struct {
+	IsPaid    bool `json:"isPaid"`
+	OrderID   int  `json:"id,omitempty"`
+	PaymentID int  `json:"paymentId,omitempty"`
+}
+
 type Order struct {
 	ID        int       `json:"orderID"`
 	List      []Bouquet `json:"bouquetsList"`
 	OrderCost int       `json:"orderCost"`
+	Payment   bool      `json:"isPaid"`
 }

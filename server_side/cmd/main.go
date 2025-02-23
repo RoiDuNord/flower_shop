@@ -19,17 +19,25 @@ func main() {
 	server.Run(cfg)
 }
 
-// logFile, err := os.OpenFile("app.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
-// if err != nil {
-// 	fmt.Println("Ошибка при открытии файла логов:", err)
-// 	return
-// }
-// defer logFile.Close()
-// log.SetOutput(logFile)
+// func newLogger() (*slog.Logger, error) {
+// 	logDir, logFile := "logger", "sysLog.log"
+// 	logPath := filepath.Join(logDir, logFile)
 
-// orderInfo, err := c_order.MakeOrder()
-// if err != nil {
-// 	log.Println("Ошибка при передаче данных:", err)
-// 	return
+// 	file, err := os.OpenFile(logPath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0666)
+// 	if err != nil {
+// 		slog.Error("opening log file", "error", err)
+// 		return nil, err
+// 	}
+// 	defer file.Close()
+
+// 	opts := &slog.HandlerOptions{
+// 		AddSource: true,
+// 		Level:     slog.LevelDebug,
+// 	}
+
+// 	logger := slog.New(slog.NewJSONHandler(file, opts))
+
+// 	slog.SetDefault(logger)
+
+// 	return logger, nil
 // }
-// fmt.Println(string(orderInfo))
