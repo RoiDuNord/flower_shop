@@ -2,25 +2,16 @@ package config
 
 import (
 	"fmt"
-	"log"
-	"os"
+	"log/slog"
 
 	"github.com/joho/godotenv"
 )
 
-func LoadFromFile(file string) ([]byte, error) {
-	orderData, err := os.ReadFile(file)
-	if err != nil {
-		log.Println("Ошибка при чтении информации о заказе:", err)
-		return nil, err
-	}
-	return orderData, nil
-}
-
 func GetDBParams() ([]string, error) {
 	myEnv, err := godotenv.Read()
 	if err != nil {
-		return nil, fmt.Errorf("ошибка чтения переменных окружения: %w", err)
+		slog.Error("error reading environment variables", "error", err)
+		return nil, fmt.Errorf("error reading environment variables: %w", err)
 	}
 
 	requiredKeys := []string{"HOST", "PORT", "USER", "PASSWORD", "NAME", "SSLMODE"}
@@ -28,7 +19,8 @@ func GetDBParams() ([]string, error) {
 
 	for _, key := range requiredKeys {
 		if value, exists := myEnv[key]; !exists || value == "" {
-			return nil, fmt.Errorf("не установлено значение для переменной окружения: %s", key)
+			slog.Warn("environment variable missing or empty", "key", key)
+			return nil, fmt.Errorf("missing or empty value for environment variable: %s", key)
 		} else {
 			params = append(params, value)
 		}

@@ -2,18 +2,18 @@ package models
 
 type Postcard struct {
 	Message string `json:"message"`
-	Price   int    `json:"price"`
+	Cost    int    `json:"cost"`
 }
 
 type Pack struct {
 	Material string `json:"material"`
-	Price    int    `json:"price"`
+	Cost     int    `json:"cost"`
 }
 
 type Decoration struct {
-	Postcard Postcard `json:"postcard"`
-	Pack     Pack     `json:"pack"`
-	Cost     int      `json:"decorationCost"`
+	Postcard       Postcard `json:"postcard"`
+	Pack           Pack     `json:"pack"`
+	DecorationCost int      `json:"decorationCost"`
 }
 
 type Flower struct {
@@ -25,21 +25,21 @@ type Flower struct {
 }
 
 type Bouquet struct {
-	Position   int        `json:"position"`
-	Flowers    []Flower   `json:"bouquet"`
-	Decoration Decoration `json:"decoration"`
-	Cost       int        `json:"bouquetCost"`
+	Position    int        `json:"position"`
+	FlowerList  []Flower   `json:"bouquet"`
+	Decoration  Decoration `json:"decoration"`
+	BouquetCost int        `json:"bouquetCost"`
 }
 
 type Payment struct {
-	IsPaid    bool `json:"isPaid"`
-	OrderID   int  `json:"id,omitempty"`
-	PaymentID int  `json:"paymentId,omitempty"`
+	OrderID   int  `json:"orderID,omitempty"`
+	IsPaid    bool `json:"IsPaid"`
+	PaymentID int  `json:"paymentID,omitempty"`
 }
 
 type Order struct {
-	ID        int       `json:"orderID"`
-	List      []Bouquet `json:"bouquetsList"`
-	OrderCost int       `json:"orderCost"`
-	Payment   bool      `json:"isPaid"`
+	ID           int       `json:"orderID"`
+	BouquetsList []Bouquet `json:"bouquetsList"`
+	OrderCost    int       `json:"orderCost"`
+	PaymentID    int       `json:"paymentID,omitempty"`
 }

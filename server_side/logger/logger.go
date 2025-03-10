@@ -6,16 +6,18 @@ import (
 	"path/filepath"
 )
 
-func Init() *slog.Logger {
-	logDir, logFile := "logger", "sysLog.log"
+func Init() *os.File {
+	logDir, logFile := "logger", "logger.log"
 	logPath := filepath.Join(logDir, logFile)
+
+	if err := os.MkdirAll(logDir, os.ModePerm); err != nil {
+		slog.Error("creating log directory", "error", err)
+	}
 
 	file, err := os.OpenFile(logPath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0666)
 	if err != nil {
 		slog.Error("opening log file", "error", err)
-		return nil
 	}
-	defer file.Close()
 
 	opts := &slog.HandlerOptions{
 		AddSource: true,
@@ -23,32 +25,7 @@ func Init() *slog.Logger {
 	}
 
 	logger := slog.New(slog.NewJSONHandler(file, opts))
-
 	slog.SetDefault(logger)
 
-	return logger
+	return file
 }
-
-// func getCallerInfo() (string, string, int) {
-// 	pc, file, line, ok := runtime.Caller(1)
-// 	if !ok {
-// 		return "unknown file", "unknown func", 0
-// 	}
-
-// 	index := strings.Index(file, "flower_shop")
-// 	if index != -1 {
-// 		file = file[index:]
-// 	} else {
-// 		file = "unknown file:" + file
-// 	}
-
-// 	fn := runtime.FuncForPC(pc).Name()
-// 	fnParts := strings.Split(fn, ".")
-// 	if len(fnParts) > 0 {
-// 		fn = fnParts[len(fnParts)-1]
-// 	} else {
-// 		fn = "unknown func:" + fn
-// 	}
-
-// 	return file, fn, line
-// }

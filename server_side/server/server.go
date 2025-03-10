@@ -1,114 +1,54 @@
 package server
 
 import (
-	"encoding/json"
+	"context"
 	"fmt"
-	"log"
-	"log/slog"
 	"net/http"
-	"os"
-	"path/filepath"
+	"time"
+
+	"log/slog"
 
 	"server/config"
-	"server/db"
-	"server/models"
+	"server/handlers"
 
 	"github.com/go-chi/chi"
 )
 
-type Server struct {
-	db *db.Database
-}
-
 func Run(cfg config.Config) error {
-	// этот кусок
-	logDir, logFile := "logger", "sysLog.log"
-	logPath := filepath.Join(logDir, logFile)
-
-	file, err := os.OpenFile(logPath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0666)
-	if err != nil {
-		slog.Error("opening log file", "error", err)
-		return err
-	}
-	defer file.Close()
-
-	opts := &slog.HandlerOptions{
-		AddSource: true,
-		Level:     slog.LevelDebug,
-	}
-
-	Logger := slog.New(slog.NewJSONHandler(file, opts))
-
-	slog.SetDefault(Logger)
-	// до этого момента
+	ctx, cancel := context.WithTimeout(context.Background(), 45*time.Second)
+	defer cancel()
 
 	router := chi.NewRouter()
 
-	s, err := newServer()
+	s, err := handlers.NewServer(cfg, router)
 	if err != nil {
-		log.Println(err)
+		slog.Warn("running server error")
 		return err
 	}
 
-	router.Get("/admin/info", s.InfoHandler)
-	router.Post("/payOrder", s.PayOrder)
+	defer s.DB.Close()
 
-	slog.Info("starting HTTP server on port")
-	if err := http.ListenAndServe(fmt.Sprintf(":%d", cfg.Port), router); err != nil {
-		slog.Info("starting HTTP server error")
+	router.Get("/admin/info", s.OrderHandling)
+	router.Post("/orders/payment", s.PaymentHandling)
+
+	server := s.HTTPServer
+
+	go func() {
+		slog.Info(fmt.Sprintf("starting HTTP server on port: %d", cfg.Port))
+		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			slog.Error("error starting HTTP server", "error", err)
+			return
+		}
+	}()
+
+	<-ctx.Done()
+
+	if err := server.Shutdown(ctx); err != nil {
+		slog.Error("error shutting down server", "error", err)
+		return err
 	}
 
-	// data := bl.OrderManage(s.Db)
-
-	// fmt.Println(data)
+	slog.Info("server gracefully shutdown")
 
 	return nil
-}
-
-func newDB() (*db.Database, error) {
-	dbParams, err := config.GetDBParams()
-	if err != nil {
-		log.Println(err)
-		return nil, err
-	}
-
-	database, err := db.Init(dbParams)
-	if err != nil {
-		log.Println(err)
-		return nil, err
-	}
-
-	return database, nil
-}
-
-func newServer() (*Server, error) {
-
-	database, err := newDB()
-	if err != nil {
-		slog.String("error", err.Error())
-		return nil, err
-	}
-
-	s := &Server{
-		db: database,
-	}
-
-	return s, nil
-}
-
-func (s *Server) InfoHandler(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Server info"))
-}
-
-func (s *Server) PayOrder(w http.ResponseWriter, r *http.Request) {
-	var payStatus models.Payment
-	if err := json.NewDecoder(r.Body).Decode(&payStatus); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(err)
-		return
-	}
-	defer r.Body.Close()
-
-	order := models.Order{}
-	log.Printf("new factor %v", order.Payment)
 }

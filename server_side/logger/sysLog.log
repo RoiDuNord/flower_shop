@@ -1,2 +1,0 @@
-{"time":"2025-02-23T13:53:23.992126+03:00","level":"INFO","source":{"function":"server/db.Init","file":"/Volumes/Data/Go_Projects/flower_shop/server_side/db/db.go","line":35},"msg":"successfully connected to the database!"}
-{"time":"2025-02-23T13:53:23.992289+03:00","level":"INFO","source":{"function":"server/server.Run","file":"/Volumes/Data/Go_Projects/flower_shop/server_side/server/server.go","line":54},"msg":"starting HTTP server on port"}
