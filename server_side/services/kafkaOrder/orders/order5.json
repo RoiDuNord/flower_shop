@@ -1,0 +1,48 @@
+[
+    {
+        "position": 1,
+        "bouquet": [
+            {
+                "name": "Роза",
+                "color": "Красная",
+                "quantity": 10
+            },
+            {
+                "name": "Лилия",
+                "color": "Белая",
+                "quantity": 5
+            }
+        ],
+        "decoration": {
+            "postcard": {
+                "message": "С Днём рождения!"
+            },
+            "pack": {
+                "material": "Крафт"
+            }
+        }
+    },
+    {
+        "position": 2,
+        "bouquet": [
+            {
+                "name": "Пион",
+                "color": "Розовый",
+                "quantity": 9
+            },
+            {
+                "name": "Лотос",
+                "color": "Белый",
+                "quantity": 6
+            }
+        ],
+        "decoration": {
+            "postcard": {
+                "message": "С Юбилеем!"
+            },
+            "pack": {
+                "material": "Лента"
+            }
+        }
+    }
+]

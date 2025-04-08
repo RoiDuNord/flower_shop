@@ -43,8 +43,3 @@ func (d *Database) Close() error {
 	slog.Info("database connection successfully closed")
 	return nil
 }
-
-// type UpdaterDB interface {
-// 	UpdateQuantityAndCost() error
-// 	UpdateDecorationCost() error
-// } куда можно?

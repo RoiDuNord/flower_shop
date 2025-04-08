@@ -1,0 +1,71 @@
+[
+    {
+        "position": 1,
+        "bouquet": [
+            {
+                "name": "Роза",
+                "color": "Белая",
+                "quantity": 17
+            },
+            {
+                "name": "Лилия",
+                "color": "Жёлтая",
+                "quantity": 8
+            }
+        ],
+        "decoration": {
+            "postcard": {
+                "message": "С Днём рождения!"
+            },
+            "pack": {
+                "material": "Плёнка"
+            }
+        }
+    },
+    {
+        "position": 2,
+        "bouquet": [
+            {
+                "name": "Пион",
+                "color": "Белый",
+                "quantity": 10
+            },
+            {
+                "name": "Роза",
+                "color": "Красная",
+                "quantity": 15
+            }
+        ],
+        "decoration": {
+            "postcard": {
+                "message": "С Юбилеем!"
+            },
+            "pack": {
+                "material": "Лента"
+            }
+        }
+    },
+    {
+        "position": 3,
+        "bouquet": [
+            {
+                "name": "Роза",
+                "color": "Жёлтая",
+                "quantity": 10
+            },
+            {
+                "name": "Роза",
+                "color": "Красная",
+                "quantity": 15
+            }
+        ],
+        "decoration": {
+            "postcard": {
+                "message": "С 8 марта!"
+            },
+            "pack": {
+                "material": "Крафт"
+            }
+        }
+    }
+]

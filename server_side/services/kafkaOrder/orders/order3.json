@@ -1,0 +1,25 @@
+[
+    {
+        "position": 1,
+        "bouquet": [
+            {
+                "name": "Пион",
+                "color": "Розовый",
+                "quantity": 12
+            },
+            {
+                "name": "Роза",
+                "color": "Белая",
+                "quantity": 9
+            }
+        ],
+        "decoration": {
+            "postcard": {
+                "message": "С Днём Влюбленных!"
+            },
+            "pack": {
+                "material": "Крафт"
+            }
+        }
+    }
+]

@@ -24,6 +24,6 @@ func (d *Database) UpdateFlowerQty(quantity int, flowerName, flowerColor string)
 		return fmt.Errorf("no flower with name '%s' and color '%s'", flowerName, flowerColor)
 	}
 
-	slog.Info(fmt.Sprintf("updated quantity by %d for %s %s", quantity, flowerName, flowerColor))
+	slog.Info(fmt.Sprintf("updated quantity by %d for '%s %s'", quantity, flowerName, flowerColor))
 	return nil
 }

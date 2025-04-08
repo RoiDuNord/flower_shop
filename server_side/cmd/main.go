@@ -2,6 +2,7 @@ package main
 
 import (
 	"log/slog"
+	_ "net/http/pprof"
 	"server/config"
 	"server/logger"
 	"server/server"
@@ -25,5 +26,4 @@ func main() {
 	if err := server.Run(cfg); err != nil {
 		return
 	}
-
 }

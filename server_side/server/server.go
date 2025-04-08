@@ -10,6 +10,8 @@ import (
 
 	"server/config"
 	"server/handlers"
+	ko "server/services/kafkaOrder"
+	kp "server/services/kafkaPayment"
 
 	"github.com/go-chi/chi"
 )
@@ -18,9 +20,12 @@ func Run(cfg config.Config) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 45*time.Second)
 	defer cancel()
 
+	orderQty := 5
+	ctx = context.WithValue(ctx, "orderQty", orderQty)
+
 	router := chi.NewRouter()
 
-	s, err := handlers.NewServer(cfg, router)
+	s, err := handlers.NewServer(cfg, router, ctx)
 	if err != nil {
 		slog.Warn("running server error")
 		return err
@@ -28,10 +33,11 @@ func Run(cfg config.Config) error {
 
 	defer s.DB.Close()
 
-	router.Get("/admin/info", s.OrderHandling)
-	router.Post("/orders/payment", s.PaymentHandling)
-
 	server := s.HTTPServer
+
+	router.Post("/orders/create", s.CreateOrder)
+	router.Get("/orders/get", s.GetOrders)
+	// router.Post("/orders/payment/process", s.CheckAndAttachPayment)
 
 	go func() {
 		slog.Info(fmt.Sprintf("starting HTTP server on port: %d", cfg.Port))
@@ -40,6 +46,9 @@ func Run(cfg config.Config) error {
 			return
 		}
 	}()
+
+	ko.OrderToKafka(ctx, orderQty)
+	kp.PaymentToKafka(ctx, orderQty)
 
 	<-ctx.Done()
 
