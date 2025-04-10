@@ -49,7 +49,6 @@ func initRedis() *redis.Client {
 	return redis.NewClient(&redis.Options{
 		Addr:     "localhost:6379",
 		Password: "1234",
-		DB:       0,
 	})
 }
 
@@ -90,13 +89,13 @@ func (s *Server) CreateOrder(w http.ResponseWriter, r *http.Request) {
 
 	var wg sync.WaitGroup
 
-	wg.Add(3)
+	wg.Add(4)
 	go s.consumeOrders(&wg, orderChan)
 	go s.consumePayments(&wg, paymentChan)
 	go processPayments(&wg, paymentChan, payments)
-	wg.Wait()
+	go s.combineOrders(&wg, orderChan, payments, w)
 
-	s.combineOrders(orderChan, payments, w)
+	wg.Wait()
 }
 
 func (s *Server) getOrderQuantity() (int, error) {
@@ -146,11 +145,10 @@ func processPayments(wg *sync.WaitGroup, paymentChan chan models.Payment, paymen
 	}
 }
 
-func (s *Server) combineOrders(orderChan chan models.Order, payments map[int]models.Payment, w http.ResponseWriter) {
+func (s *Server) combineOrders(wg *sync.WaitGroup, orderChan chan models.Order, payments map[int]models.Payment, w http.ResponseWriter) {
+	defer wg.Done()
 	for rawOrder := range orderChan {
-		go func() {
-			s.processOrder(rawOrder, payments, w)
-		}()
+		s.processOrder(rawOrder, payments, w)
 	}
 }
 

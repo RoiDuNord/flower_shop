@@ -15,6 +15,7 @@ func Consumer(ctx context.Context, orderChan chan models.Order, unprocessedQty i
 	t := time.Now()
 	reader := initReader()
 	defer reader.Close()
+	defer close(orderChan)
 
 	for range unprocessedQty {
 		if err := readAndProcessMessage(ctx, reader, orderChan); err != nil {
@@ -24,18 +25,11 @@ func Consumer(ctx context.Context, orderChan chan models.Order, unprocessedQty i
 	}
 
 	// for range unprocessedQty {
-	// 	if err := readAndProcessMessage(ctx, reader, orderChan); err != nil {
-	// 		slog.Error("Error processing order", "error", err)
-	// 		continue
-	// 	}
-	// }
-
-	// for i := range unprocessedQty {
-	// 	go func(i int) {
+	// 	go func() {
 	// 		if err := readAndProcessMessage(ctx, reader, orderChan); err != nil {
 	// 			slog.Error("Error processing order", "error", err)
 	// 		}
-	// 	}(i)
+	// 	}()
 	// }
 
 	dur := time.Since(t)
