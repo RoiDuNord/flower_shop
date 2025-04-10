@@ -24,7 +24,7 @@ func ProcessOrder(ctx context.Context, db *db.Database, rawOrderData models.Orde
 }
 
 func (om *OrderManager) ParseOrder(ctx context.Context, rawOrderData models.Order) (models.Order, error) {
-	checkedOrder, err := om.handleBouquetsRequest(ctx, rawOrderData)
+	checkedOrder, err := om.handleBouquetsRequest(rawOrderData)
 	if err != nil {
 		slog.Error("error handling bouquets request", "error", err)
 		return models.Order{}, err

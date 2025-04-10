@@ -9,7 +9,7 @@ import (
 func (om *OrderManager) GetFlowerAvailQtyAndCost(flower *models.Flower) error {
 	flowerName := fmt.Sprintf("%s %s", flower.Name, flower.Color)
 
-	slog.Info(fmt.Sprintf("getting %s availability and cost", flowerName))
+	slog.Info(fmt.Sprintf("getting '%s' availability and cost", flowerName))
 
 	availQty, cost, err := om.DB.GetFlowerQtyAndCost(flower.Name, flower.Color)
 	if err != nil {

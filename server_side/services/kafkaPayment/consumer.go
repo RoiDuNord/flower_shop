@@ -6,21 +6,33 @@ import (
 	"fmt"
 	"log/slog"
 	"server/models"
+	"time"
 
 	"github.com/segmentio/kafka-go"
 )
 
 func Consumer(ctx context.Context, paymentChan chan models.Payment, unprocessedQty int) {
+	t := time.Now()
 	reader := initReader()
 	defer reader.Close()
 	defer close(paymentChan)
 
 	for range unprocessedQty {
 		if err := readAndProcessMessage(ctx, reader, paymentChan); err != nil {
-			slog.Error("Error processing payment", "error", err)
-			continue
+			slog.Error("Error processing order", "error", err)
 		}
 	}
+
+	// for range unprocessedQty {
+	// 	go func() {
+	// 		if err := readAndProcessMessage(ctx, reader, paymentChan); err != nil {
+	// 			slog.Error("Error processing order", "error", err)
+	// 		}
+	// 	}()
+	// }
+
+	dur := time.Since(t)
+	fmt.Println("Payment", dur)
 }
 
 func initReader() *kafka.Reader {
@@ -52,6 +64,5 @@ func paymentToChannel(message []byte, paymentChan chan models.Payment) error {
 
 	paymentChan <- payment
 	slog.Info("Processed payment", "payment", payment)
-	// fmt.Println("Processed payment:", payment)
 	return nil
 }

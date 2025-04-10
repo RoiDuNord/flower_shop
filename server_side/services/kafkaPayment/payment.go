@@ -21,7 +21,7 @@ func initWriter() *kafka.Writer {
 	return kafka.NewWriter(kafka.WriterConfig{
 		Brokers:      []string{"localhost:9092"},
 		Topic:        "payments",
-		BatchSize:    5,
-		BatchTimeout: 5 * time.Millisecond,
+		BatchSize:    1,
+		BatchTimeout: 1 * time.Millisecond,
 	})
 }

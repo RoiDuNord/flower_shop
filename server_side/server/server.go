@@ -37,7 +37,6 @@ func Run(cfg config.Config) error {
 
 	router.Post("/orders/create", s.CreateOrder)
 	router.Get("/orders/get", s.GetOrders)
-	// router.Post("/orders/payment/process", s.CheckAndAttachPayment)
 
 	go func() {
 		slog.Info(fmt.Sprintf("starting HTTP server on port: %d", cfg.Port))

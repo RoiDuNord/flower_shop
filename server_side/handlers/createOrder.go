@@ -2,9 +2,11 @@ package handlers
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"sync"
+	"time"
 
 	"log/slog"
 
@@ -16,17 +18,17 @@ import (
 	kp "server/services/kafkaPayment"
 
 	"github.com/go-chi/chi"
+	"github.com/redis/go-redis/v9"
 )
 
 type Server struct {
 	DB         *db.Database
+	RDB        *redis.Client
 	HTTPServer *http.Server
 	Context    context.Context
-	Orders     map[int]models.Order
-	mu         sync.Mutex
 }
 
-func newDB() (*db.Database, error) {
+func initPostgres() (*db.Database, error) {
 	dbParams, err := config.GetDBParams()
 	if err != nil {
 		slog.Error("error getting DB parameters", "error", err)
@@ -43,20 +45,30 @@ func newDB() (*db.Database, error) {
 	return database, nil
 }
 
+func initRedis() *redis.Client {
+	return redis.NewClient(&redis.Options{
+		Addr:     "localhost:6379",
+		Password: "1234",
+		DB:       0,
+	})
+}
+
 func NewServer(cfg config.Config, router *chi.Mux, ctx context.Context) (*Server, error) {
-	database, err := newDB()
+	database, err := initPostgres()
 	if err != nil {
 		return nil, err
 	}
 
+	rDB := initRedis()
+
 	s := &Server{
-		DB: database,
+		DB:  database,
+		RDB: rDB,
 		HTTPServer: &http.Server{
 			Addr:    fmt.Sprintf("localhost:%d", cfg.Port),
 			Handler: router,
 		},
 		Context: ctx,
-		Orders:  make(map[int]models.Order, 5),
 	}
 
 	slog.Info("server created successfully", "address", s.HTTPServer.Addr)
@@ -74,17 +86,17 @@ func (s *Server) CreateOrder(w http.ResponseWriter, r *http.Request) {
 	}
 
 	orderChan, paymentChan := initializeChannels(orderQty)
-	orders, payments := initializeMaps()
+	payments := make(map[int]models.Payment)
 
 	var wg sync.WaitGroup
 
-	wg.Add(4)
-	go s.consumeOrders(&wg, orderChan)     // сначала это
-	go s.consumePayments(&wg, paymentChan) // потом это
+	wg.Add(3)
+	go s.consumeOrders(&wg, orderChan)
+	go s.consumePayments(&wg, paymentChan)
 	go processPayments(&wg, paymentChan, payments)
-	go s.combineOrders(&wg, orderChan, payments, orders, w)
-
 	wg.Wait()
+
+	s.combineOrders(orderChan, payments, w)
 }
 
 func (s *Server) getOrderQuantity() (int, error) {
@@ -97,25 +109,34 @@ func (s *Server) getOrderQuantity() (int, error) {
 }
 
 func initializeChannels(orderQty int) (chan models.Order, chan models.Payment) {
-	orderChan := make(chan models.Order, orderQty)
-	paymentChan := make(chan models.Payment, orderQty)
-	return orderChan, paymentChan
-}
-
-func initializeMaps() (map[int]models.Order, map[int]models.Payment) {
-	orders := make(map[int]models.Order)
-	payments := make(map[int]models.Payment)
-	return orders, payments
+	return make(chan models.Order, orderQty), make(chan models.Payment, orderQty)
 }
 
 func (s *Server) consumeOrders(wg *sync.WaitGroup, orderChan chan models.Order) {
 	defer wg.Done()
+	slog.Info("consumeOrders started")
+	defer slog.Info("consumeOrders finished")
+
+	start := time.Now()
+
 	ko.Consumer(s.Context, orderChan, cap(orderChan))
+
+	duration := time.Since(start)
+	fmt.Printf("consumeOrders took %s\n", duration)
 }
 
 func (s *Server) consumePayments(wg *sync.WaitGroup, paymentChan chan models.Payment) {
 	defer wg.Done()
+
+	slog.Info("consumePayments started")
+	defer slog.Info("consumePayments finished")
+
+	start := time.Now()
+
 	kp.Consumer(s.Context, paymentChan, cap(paymentChan))
+
+	duration := time.Since(start)
+	fmt.Printf("consumePayments took %s\n", duration)
 }
 
 func processPayments(wg *sync.WaitGroup, paymentChan chan models.Payment, payments map[int]models.Payment) {
@@ -125,26 +146,27 @@ func processPayments(wg *sync.WaitGroup, paymentChan chan models.Payment, paymen
 	}
 }
 
-func (s *Server) combineOrders(wg *sync.WaitGroup, orderChan chan models.Order, payments map[int]models.Payment, orders map[int]models.Order, w http.ResponseWriter) {
-	defer wg.Done()
+func (s *Server) combineOrders(orderChan chan models.Order, payments map[int]models.Payment, w http.ResponseWriter) {
 	for rawOrder := range orderChan {
-		s.processOrder(rawOrder, payments, orders, w)
+		go func() {
+			s.processOrder(rawOrder, payments, w)
+		}()
 	}
 }
 
-func (s *Server) processOrder(rawOrder models.Order, payments map[int]models.Payment, orders map[int]models.Order, w http.ResponseWriter) {
+func (s *Server) processOrder(rawOrder models.Order, payments map[int]models.Payment, w http.ResponseWriter) {
 	processedOrder, err := bl.ProcessOrder(s.Context, s.DB, rawOrder)
 	if err != nil {
 		slog.Error(fmt.Sprintf("error processing order: %e", err))
 		return
 	}
 
-	if err := s.handlePayment(processedOrder.ID, payments, &processedOrder); err != nil {
+	if err := handlePayment(processedOrder.ID, payments, &processedOrder); err != nil {
 		slog.Error(err.Error())
 		return
 	}
 
-	if err := s.addProcessedOrder(processedOrder, orders); err != nil {
+	if err := s.addProcessedOrder(processedOrder); err != nil {
 		slog.Warn(err.Error())
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
@@ -153,7 +175,7 @@ func (s *Server) processOrder(rawOrder models.Order, payments map[int]models.Pay
 	slog.Info("order successfully processed", "order", processedOrder)
 }
 
-func (s *Server) handlePayment(orderID int, payments map[int]models.Payment, processedOrder *models.Order) error {
+func handlePayment(orderID int, payments map[int]models.Payment, processedOrder *models.Order) error {
 	payment, exists := payments[orderID]
 	if !exists {
 		return fmt.Errorf("payment not found for order ID: %d", orderID)
@@ -162,13 +184,23 @@ func (s *Server) handlePayment(orderID int, payments map[int]models.Payment, pro
 	return nil
 }
 
-func (s *Server) addProcessedOrder(processedOrder models.Order, orders map[int]models.Order) error {
+func (s *Server) addProcessedOrder(processedOrder models.Order) error {
 	if len(processedOrder.BouquetsList) == 0 {
 		return fmt.Errorf("no bouquets found in order")
 	}
 
-	orders[processedOrder.ID] = processedOrder
-	s.Orders[processedOrder.ID] = processedOrder
+	binaryOrder, err := json.Marshal(processedOrder)
+	if err != nil {
+		slog.Error("error marshalling processed order", "error", err)
+		return err
+	}
+
+	if err := s.RDB.Set(s.Context, fmt.Sprintf("order_%d", processedOrder.ID), binaryOrder, 0).Err(); err != nil {
+		slog.Error("error adding order to Redis", "error", err)
+		return err
+	}
+	slog.Info("added order to Redis", "orderID", processedOrder.ID)
+
 	return nil
 }
 

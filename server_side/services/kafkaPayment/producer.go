@@ -64,7 +64,7 @@ func sendPaymentToKafka(ctx context.Context, payment models.Payment, producer *k
 		return fmt.Errorf("failed to write payment to Kafka: %w", err)
 	}
 
-	// slog.Info("payment sent to Kafka", "paymentID", payment.PaymentID)
+	slog.Info("payment sent to Kafka", "paymentID", payment.PaymentID)
 	return nil
 }
 

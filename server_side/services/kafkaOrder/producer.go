@@ -36,12 +36,12 @@ func orderToKafka(ctx context.Context, number int, writer *kafka.Writer) error {
 
 	var order models.Order
 	if err = json.Unmarshal(fileData, &order.BouquetsList); err != nil {
-		return fmt.Errorf("error unmarshaling order data: %w", err)
+		return fmt.Errorf("error unmarshaling order data for order %d: %w", number, err)
 	}
 	fmt.Println("len(bouquets)", len(order.BouquetsList))
 
 	if err = sendOrderToKafka(ctx, order, writer); err != nil {
-		return fmt.Errorf("error sending order to Kafka: %w", err)
+		return fmt.Errorf("error sending order %d to Kafka: %w", number, err)
 	}
 
 	return nil
@@ -50,7 +50,7 @@ func orderToKafka(ctx context.Context, number int, writer *kafka.Writer) error {
 func sendOrderToKafka(ctx context.Context, order models.Order, writer *kafka.Writer) error {
 	orderData, err := json.Marshal(order)
 	if err != nil {
-		return fmt.Errorf("failed to marshal order: %w", err)
+		return fmt.Errorf("failed to marshal order %d: %w", order.ID, err)
 	}
 
 	keyOrderID := fmt.Appendf(nil, "orderID_%d", order.ID)
@@ -63,14 +63,18 @@ func sendOrderToKafka(ctx context.Context, order models.Order, writer *kafka.Wri
 	)
 
 	if err != nil {
-		return fmt.Errorf("failed to write order to Kafka: %w", err)
+		return fmt.Errorf("failed to write order %d to Kafka: %w", order.ID, err)
 	}
 
+	slog.Info("order sent to Kafka")
 	return nil
 }
 
 func loadDataFromFile(number int) ([]byte, error) {
-	file := getFilePath(number)
+	file, err := getFilePath(number)
+	if err != nil {
+		return nil, fmt.Errorf("incorrect path %s", file)
+	}
 	paymentData, err := os.ReadFile(file)
 	if err != nil {
 		return nil, fmt.Errorf("error reading from %s: %w", file, err)
@@ -78,11 +82,10 @@ func loadDataFromFile(number int) ([]byte, error) {
 	return paymentData, nil
 }
 
-func getFilePath(orderNumber int) string {
+func getFilePath(orderNumber int) (string, error) {
 	cwd, err := os.Getwd()
 	if err != nil {
-		slog.Error("error getting current directory", "error", err)
-		return ""
+		return "", fmt.Errorf("error getting current directory: %w", err)
 	}
-	return filepath.Join(cwd, "services", "kafkaOrder", "orders", fmt.Sprintf("order%d.json", orderNumber))
+	return filepath.Join(cwd, "services", "kafkaOrder", "orders", fmt.Sprintf("order%d.json", orderNumber)), nil
 }

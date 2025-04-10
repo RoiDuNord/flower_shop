@@ -1,7 +1,6 @@
 package businesslogic
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"log/slog"
@@ -9,7 +8,7 @@ import (
 	"server/models"
 )
 
-func (om *OrderManager) handleBouquetsRequest(ctx context.Context, rawOrderData models.Order) ([]byte, error) {
+func (om *OrderManager) handleBouquetsRequest(rawOrderData models.Order) ([]byte, error) {
 	checkedBouquets, err := om.updateBouquets(rawOrderData.BouquetsList)
 	if err != nil {
 		slog.Error("error updating bouquets", "error", err)
@@ -39,14 +38,6 @@ func (om *OrderManager) updateBouquets(bouquets []models.Bouquet) ([]models.Bouq
 			slog.Info("flower updated", "name", fullFlowerName, "quantity", flower.Quantity, "cost", flower.Cost)
 			updateBouquetCost(om, bouquet)
 		}
-
-		// if bouquet.BouquetCost != 0 {
-		// 	if err := om.decorationCost(bouquet, &bouquet.BouquetCost); err != nil {
-		// 		slog.Error("error updating decoration cost for bouquet", "error", err)
-		// 	}
-		// } else {
-		// 	slog.Error("zero-price bouquet")
-		// }
 
 		fmt.Printf("%d bouquet total cost: %d\n", i+1, bouquet.BouquetCost)
 	}

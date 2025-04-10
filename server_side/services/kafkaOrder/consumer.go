@@ -6,20 +6,40 @@ import (
 	"fmt"
 	"log/slog"
 	"server/models"
+	"time"
 
 	"github.com/segmentio/kafka-go"
 )
 
 func Consumer(ctx context.Context, orderChan chan models.Order, unprocessedQty int) {
+	t := time.Now()
 	reader := initReader()
 	defer reader.Close()
-	defer close(orderChan)
 
 	for range unprocessedQty {
 		if err := readAndProcessMessage(ctx, reader, orderChan); err != nil {
 			slog.Error("Error processing order", "error", err)
+			continue
 		}
 	}
+
+	// for range unprocessedQty {
+	// 	if err := readAndProcessMessage(ctx, reader, orderChan); err != nil {
+	// 		slog.Error("Error processing order", "error", err)
+	// 		continue
+	// 	}
+	// }
+
+	// for i := range unprocessedQty {
+	// 	go func(i int) {
+	// 		if err := readAndProcessMessage(ctx, reader, orderChan); err != nil {
+	// 			slog.Error("Error processing order", "error", err)
+	// 		}
+	// 	}(i)
+	// }
+
+	dur := time.Since(t)
+	fmt.Println("Order", dur)
 }
 
 func initReader() *kafka.Reader {
@@ -50,6 +70,7 @@ func orderToChannel(message []byte, orderChan chan models.Order) error {
 		return fmt.Errorf("error unmarshaling order: %w", err)
 	}
 
+	fmt.Println("len(order.BouquetsList)", len(order.BouquetsList))
 	orderChan <- order
 	slog.Info("Processed order", "order", order)
 	return nil
