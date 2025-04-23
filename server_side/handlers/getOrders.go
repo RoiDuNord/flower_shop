@@ -13,6 +13,7 @@ func (s *Server) GetOrders(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	slog.Info("GetOrders handler starts")
+	defer slog.Info("GetOrders completed")
 
 	var wg sync.WaitGroup
 	var mu sync.Mutex
@@ -43,7 +44,7 @@ func (s *Server) GetOrders(w http.ResponseWriter, r *http.Request) {
 }
 
 func fromRedis(s *Server, numb int) (models.Order, error) {
-	stringOrder, err := s.RDB.Get(s.Context, fmt.Sprintf("order_%d", numb)).Result()
+	stringOrder, err := s.RDB.Get(s.Ctx, fmt.Sprintf("order_%d", numb)).Result()
 	if err != nil {
 		return models.Order{}, err
 	}

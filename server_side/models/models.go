@@ -44,3 +44,5 @@ type Payment struct {
 	IsPaid    bool `json:"IsPaid"`
 	PaymentID int  `json:"paymentID,omitempty"`
 }
+
+type OrderQtyKey struct{}

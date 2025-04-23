@@ -8,7 +8,7 @@ import (
 	"github.com/segmentio/kafka-go"
 )
 
-func PaymentToKafka(ctx context.Context, orderQty int) {
+func SendPaymentToKafka(ctx context.Context, orderQty int) {
 	writer := initWriter()
 	defer writer.Close()
 

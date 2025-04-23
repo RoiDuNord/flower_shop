@@ -20,7 +20,7 @@ func producer(ctx context.Context, reqQty int, writer *kafka.Writer) {
 	for i := 1; i <= reqQty; i++ {
 		go func(i int) {
 			defer wg.Done()
-			if err := orderToKafka(ctx, i, writer); err != nil {
+			if err := processOrder(ctx, i, writer); err != nil {
 				slog.Error("Failed to load order", "orderID", i, "error", err)
 			}
 		}(i)
@@ -28,7 +28,7 @@ func producer(ctx context.Context, reqQty int, writer *kafka.Writer) {
 	wg.Wait()
 }
 
-func orderToKafka(ctx context.Context, number int, writer *kafka.Writer) error {
+func processOrder(ctx context.Context, number int, writer *kafka.Writer) error {
 	fileData, err := loadDataFromFile(number)
 	if err != nil {
 		return err

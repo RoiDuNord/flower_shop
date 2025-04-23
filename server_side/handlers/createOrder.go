@@ -25,9 +25,11 @@ type Server struct {
 	DB         *db.Database
 	RDB        *redis.Client
 	HTTPServer *http.Server
-	Context    context.Context
+	Ctx        context.Context
+	Router     *chi.Mux
 }
 
+// initPostgres initializes the PostgreSQL database
 func initPostgres() (*db.Database, error) {
 	dbParams, err := config.GetDBParams()
 	if err != nil {
@@ -45,20 +47,36 @@ func initPostgres() (*db.Database, error) {
 	return database, nil
 }
 
-func initRedis() *redis.Client {
-	return redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
-		Password: "1234",
+// initRedis initializes the Redis client
+func initRedis() (*redis.Client, error) {
+	rdb := redis.NewClient(&redis.Options{
+		Addr:     "localhost:6379", // Consider moving this to config
+		Password: "1234",           // Consider moving this to config
 	})
+
+	// Test the connection
+	if err := rdb.Ping(context.Background()).Err(); err != nil {
+		slog.Error("error connecting to Redis", "error", err)
+		return nil, err
+	}
+
+	slog.Info("Redis client initialized successfully")
+	return rdb, nil
 }
 
-func NewServer(cfg config.Config, router *chi.Mux, ctx context.Context) (*Server, error) {
+// NewServer creates a new Server instance
+func NewServer(cfg config.Config, ctx context.Context) (*Server, error) {
 	database, err := initPostgres()
 	if err != nil {
 		return nil, err
 	}
 
-	rDB := initRedis()
+	rDB, err := initRedis()
+	if err != nil {
+		return nil, err
+	}
+
+	router := chi.NewRouter()
 
 	s := &Server{
 		DB:  database,
@@ -67,7 +85,8 @@ func NewServer(cfg config.Config, router *chi.Mux, ctx context.Context) (*Server
 			Addr:    fmt.Sprintf("localhost:%d", cfg.Port),
 			Handler: router,
 		},
-		Context: ctx,
+		Router: router,
+		Ctx:    ctx,
 	}
 
 	slog.Info("server created successfully", "address", s.HTTPServer.Addr)
@@ -75,13 +94,25 @@ func NewServer(cfg config.Config, router *chi.Mux, ctx context.Context) (*Server
 	return s, nil
 }
 
+// Close cleans up resources used by the server
+func (s *Server) Close() {
+	if err := s.RDB.Close(); err != nil {
+		slog.Error("error closing Redis client", "error", err)
+	}
+	if err := s.DB.Close(); err != nil {
+		slog.Error("error closing database", "error", err)
+	}
+}
+
 func (s *Server) CreateOrder(w http.ResponseWriter, r *http.Request) {
 	slog.Info("received request for CreateOrder")
+	defer slog.Info("CreateOrder completed")
 
-	orderQty, err := s.getOrderQuantity()
-	if err != nil {
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
+	orderQty, ok := s.Ctx.Value(models.OrderQtyKey{}).(int)
+	if ok {
+		slog.Info("get order quantity from context", "quantity:", orderQty)
+	} else {
+		slog.Error("order quantity not found in context")
 	}
 
 	orderChan, paymentChan := initializeChannels(orderQty)
@@ -98,15 +129,6 @@ func (s *Server) CreateOrder(w http.ResponseWriter, r *http.Request) {
 	wg.Wait()
 }
 
-func (s *Server) getOrderQuantity() (int, error) {
-	orderQty, ok := s.Context.Value("orderQty").(int)
-	if !ok {
-		slog.Error("error retrieving order quantity from context")
-		return 0, fmt.Errorf("invalid order quantity")
-	}
-	return orderQty, nil
-}
-
 func initializeChannels(orderQty int) (chan models.Order, chan models.Payment) {
 	return make(chan models.Order, orderQty), make(chan models.Payment, orderQty)
 }
@@ -118,7 +140,7 @@ func (s *Server) consumeOrders(wg *sync.WaitGroup, orderChan chan models.Order) 
 
 	start := time.Now()
 
-	ko.Consumer(s.Context, orderChan, cap(orderChan))
+	ko.Consumer(s.Ctx, orderChan, cap(orderChan))
 
 	duration := time.Since(start)
 	fmt.Printf("consumeOrders took %s\n", duration)
@@ -132,7 +154,7 @@ func (s *Server) consumePayments(wg *sync.WaitGroup, paymentChan chan models.Pay
 
 	start := time.Now()
 
-	kp.Consumer(s.Context, paymentChan, cap(paymentChan))
+	kp.Consumer(s.Ctx, paymentChan, cap(paymentChan))
 
 	duration := time.Since(start)
 	fmt.Printf("consumePayments took %s\n", duration)
@@ -153,7 +175,7 @@ func (s *Server) combineOrders(wg *sync.WaitGroup, orderChan chan models.Order, 
 }
 
 func (s *Server) processOrder(rawOrder models.Order, payments map[int]models.Payment, w http.ResponseWriter) {
-	processedOrder, err := bl.ProcessOrder(s.Context, s.DB, rawOrder)
+	processedOrder, err := bl.ProcessOrder(s.Ctx, s.DB, rawOrder)
 	if err != nil {
 		slog.Error(fmt.Sprintf("error processing order: %e", err))
 		return
@@ -193,7 +215,7 @@ func (s *Server) addProcessedOrder(processedOrder models.Order) error {
 		return err
 	}
 
-	if err := s.RDB.Set(s.Context, fmt.Sprintf("order_%d", processedOrder.ID), binaryOrder, 0).Err(); err != nil {
+	if err := s.RDB.Set(s.Ctx, fmt.Sprintf("order_%d", processedOrder.ID), binaryOrder, 0).Err(); err != nil {
 		slog.Error("error adding order to Redis", "error", err)
 		return err
 	}

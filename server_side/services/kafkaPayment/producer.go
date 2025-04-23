@@ -20,7 +20,7 @@ func producer(ctx context.Context, reqQty int, writer *kafka.Writer) {
 	for i := 1; i <= reqQty; i++ {
 		go func(i int) {
 			defer wg.Done()
-			if err := paymentToKafka(ctx, i, writer); err != nil {
+			if err := processPayment(ctx, i, writer); err != nil {
 				slog.Error("Failed to load payment", "paymentID", i, "error", err)
 			}
 		}(i)
@@ -28,7 +28,7 @@ func producer(ctx context.Context, reqQty int, writer *kafka.Writer) {
 	wg.Wait()
 }
 
-func paymentToKafka(ctx context.Context, number int, producer *kafka.Writer) error {
+func processPayment(ctx context.Context, number int, producer *kafka.Writer) error {
 	fileData, err := loadDataFromFile(number)
 	if err != nil {
 		return err

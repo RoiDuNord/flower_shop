@@ -8,12 +8,12 @@ import (
 	"github.com/segmentio/kafka-go"
 )
 
-func OrderToKafka(ctx context.Context, orderQty int) {
+func SendOrderToKafka(ctx context.Context, orderQty int) {
 	writer := initWriter()
 	defer writer.Close()
 
 	producer(ctx, orderQty, writer)
-	
+
 	fmt.Println("Order function exiting.")
 }
 

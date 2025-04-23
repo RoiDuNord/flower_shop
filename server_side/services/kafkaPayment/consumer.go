@@ -18,7 +18,7 @@ func Consumer(ctx context.Context, paymentChan chan models.Payment, unprocessedQ
 	defer close(paymentChan)
 
 	for range unprocessedQty {
-		if err := readAndProcessMessage(ctx, reader, paymentChan); err != nil {
+		if err := consumeAndProcessMessage(ctx, reader, paymentChan); err != nil {
 			slog.Error("Error processing order", "error", err)
 		}
 	}
@@ -43,7 +43,7 @@ func initReader() *kafka.Reader {
 	})
 }
 
-func readAndProcessMessage(ctx context.Context, reader *kafka.Reader, paymentChan chan models.Payment) error {
+func consumeAndProcessMessage(ctx context.Context, reader *kafka.Reader, paymentChan chan models.Payment) error {
 	message, err := reader.ReadMessage(ctx)
 	if err != nil {
 		return fmt.Errorf("error reading payment: %w", err)
@@ -66,3 +66,5 @@ func paymentToChannel(message []byte, paymentChan chan models.Payment) error {
 	slog.Info("Processed payment", "payment", payment)
 	return nil
 }
+
+

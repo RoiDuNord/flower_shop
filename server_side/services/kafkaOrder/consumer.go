@@ -18,7 +18,7 @@ func Consumer(ctx context.Context, orderChan chan models.Order, unprocessedQty i
 	defer close(orderChan)
 
 	for range unprocessedQty {
-		if err := readAndProcessMessage(ctx, reader, orderChan); err != nil {
+		if err := consumeAndProcessMessage(ctx, reader, orderChan); err != nil {
 			slog.Error("Error processing order", "error", err)
 			continue
 		}
@@ -44,7 +44,7 @@ func initReader() *kafka.Reader {
 	})
 }
 
-func readAndProcessMessage(ctx context.Context, reader *kafka.Reader, orderChan chan models.Order) error {
+func consumeAndProcessMessage(ctx context.Context, reader *kafka.Reader, orderChan chan models.Order) error {
 	message, err := reader.ReadMessage(ctx)
 	if err != nil {
 		return fmt.Errorf("error reading order: %w", err)
