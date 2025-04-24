@@ -29,7 +29,6 @@ type Server struct {
 	Router     *chi.Mux
 }
 
-// initPostgres initializes the PostgreSQL database
 func initPostgres() (*db.Database, error) {
 	dbParams, err := config.GetDBParams()
 	if err != nil {
@@ -47,24 +46,36 @@ func initPostgres() (*db.Database, error) {
 	return database, nil
 }
 
-// initRedis initializes the Redis client
 func initRedis() (*redis.Client, error) {
-	rdb := redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379", // Consider moving this to config
-		Password: "1234",           // Consider moving this to config
-	})
+	rdb, err := redisClient()
+	if err != nil {
+		slog.Error("error initializing Redis client", "error", err)
+	}
 
-	// Test the connection
 	if err := rdb.Ping(context.Background()).Err(); err != nil {
 		slog.Error("error connecting to Redis", "error", err)
 		return nil, err
 	}
 
-	slog.Info("Redis client initialized successfully")
+	slog.Info("redis client initialized successfully")
 	return rdb, nil
 }
 
-// NewServer creates a new Server instance
+func redisClient() (*redis.Client, error) {
+	redisParams, err := config.GetRedisParams()
+	if err != nil {
+		slog.Error("error getting Redis parameters", "error", err)
+		return nil, err
+	}
+
+	rdb := redis.NewClient(&redis.Options{
+		Addr:     fmt.Sprintf("%s:%s", redisParams[0], redisParams[1]),
+		Password: fmt.Sprintf("%s", redisParams[2]),
+	})
+
+	return rdb, nil
+}
+
 func NewServer(cfg config.Config, ctx context.Context) (*Server, error) {
 	database, err := initPostgres()
 	if err != nil {
@@ -94,14 +105,15 @@ func NewServer(cfg config.Config, ctx context.Context) (*Server, error) {
 	return s, nil
 }
 
-// Close cleans up resources used by the server
-func (s *Server) Close() {
+func (s *Server) CloseAllDBs() {
 	if err := s.RDB.Close(); err != nil {
 		slog.Error("error closing Redis client", "error", err)
 	}
+	defer slog.Info("redis has been successfully shut down")
 	if err := s.DB.Close(); err != nil {
 		slog.Error("error closing database", "error", err)
 	}
+	defer slog.Info("database has been successfully shut down")
 }
 
 func (s *Server) CreateOrder(w http.ResponseWriter, r *http.Request) {

@@ -14,6 +14,7 @@ import (
 func Consumer(ctx context.Context, paymentChan chan models.Payment, unprocessedQty int) {
 	t := time.Now()
 	reader := initReader()
+	slog.Info("kafka is ready for consuming")
 	defer reader.Close()
 	defer close(paymentChan)
 

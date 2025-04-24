@@ -14,6 +14,7 @@ import (
 func Consumer(ctx context.Context, orderChan chan models.Order, unprocessedQty int) {
 	t := time.Now()
 	reader := initReader()
+	slog.Info("kafka is ready for consuming")
 	defer reader.Close()
 	defer close(orderChan)
 

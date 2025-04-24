@@ -40,6 +40,5 @@ func (d *Database) Close() error {
 	if err := d.db.Close(); err != nil {
 		return fmt.Errorf("error closing database: %w", err)
 	}
-	slog.Info("database connection successfully closed")
 	return nil
 }

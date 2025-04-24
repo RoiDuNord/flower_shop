@@ -12,7 +12,7 @@ func main() {
 	file := logger.Init()
 	slog.Info("logger initialized")
 	defer file.Close()
-	defer slog.Info("shutting down application")
+	defer slog.Info("application has been shut down")
 
 	cfg, err := config.ParseConfig()
 	if err != nil {
