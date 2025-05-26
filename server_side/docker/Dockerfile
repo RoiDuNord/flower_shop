@@ -15,6 +15,9 @@ FROM alpine:latest
 
 COPY --from=builder /app/config.yaml /docker_app/config.yaml
 COPY --from=builder /app/main /docker_app/main
+COPY --from=builder /app/.env /docker_app/.env
+COPY --from=builder /app/services/kafkaOrder/orders /docker_app/services/kafkaOrder/orders
+COPY --from=builder /app/services/kafkaPayment/payments /docker_app/services/kafkaPayment/payments
 
 WORKDIR /docker_app
 
