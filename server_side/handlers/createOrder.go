@@ -14,6 +14,7 @@ import (
 	"server/config"
 	"server/db"
 	"server/models"
+	rds "server/redis"
 	ko "server/services/kafkaOrder"
 	kp "server/services/kafkaPayment"
 
@@ -29,60 +30,13 @@ type Server struct {
 	Router     *chi.Mux
 }
 
-func initPostgres() (*db.Database, error) {
-	dbParams, err := config.GetDBParams()
-	if err != nil {
-		slog.Error("error getting DB parameters", "error", err)
-		return nil, err
-	}
-
-	database, err := db.Init(dbParams)
-	if err != nil {
-		slog.Error("error initializing database", "error", err)
-		return nil, err
-	}
-
-	slog.Info("database initialized successfully")
-	return database, nil
-}
-
-func initRedis() (*redis.Client, error) {
-	rdb, err := redisClient()
-	if err != nil {
-		slog.Error("error initializing Redis client", "error", err)
-	}
-
-	if err := rdb.Ping(context.Background()).Err(); err != nil {
-		slog.Error("error connecting to Redis", "error", err)
-		return nil, err
-	}
-
-	slog.Info("redis client initialized successfully")
-	return rdb, nil
-}
-
-func redisClient() (*redis.Client, error) {
-	redisParams, err := config.GetRedisParams()
-	if err != nil {
-		slog.Error("error getting Redis parameters", "error", err)
-		return nil, err
-	}
-
-	rdb := redis.NewClient(&redis.Options{
-		Addr:     fmt.Sprintf("%s:%s", redisParams[0], redisParams[1]),
-		Password: fmt.Sprintf("%s", redisParams[2]),
-	})
-
-	return rdb, nil
-}
-
 func NewServer(cfg config.Config, ctx context.Context) (*Server, error) {
-	database, err := initPostgres()
+	database, err := db.InitPostgres()
 	if err != nil {
 		return nil, err
 	}
 
-	rDB, err := initRedis()
+	rDB, err := rds.InitRedis()
 	if err != nil {
 		return nil, err
 	}
@@ -93,8 +47,7 @@ func NewServer(cfg config.Config, ctx context.Context) (*Server, error) {
 		DB:  database,
 		RDB: rDB,
 		HTTPServer: &http.Server{
-			Addr:    fmt.Sprintf("localhost:%d", cfg.Port),
-			Handler: router,
+			Addr: fmt.Sprintf("localhost:%d", cfg.Port),
 		},
 		Router: router,
 		Ctx:    ctx,
@@ -127,7 +80,7 @@ func (s *Server) CreateOrder(w http.ResponseWriter, r *http.Request) {
 		slog.Error("order quantity not found in context")
 	}
 
-	orderChan, paymentChan := initializeChannels(orderQty)
+	orderChan, paymentChan := initChannels(orderQty)
 	payments := make(map[int]models.Payment)
 
 	var wg sync.WaitGroup
@@ -141,7 +94,7 @@ func (s *Server) CreateOrder(w http.ResponseWriter, r *http.Request) {
 	wg.Wait()
 }
 
-func initializeChannels(orderQty int) (chan models.Order, chan models.Payment) {
+func initChannels(orderQty int) (chan models.Order, chan models.Payment) {
 	return make(chan models.Order, orderQty), make(chan models.Payment, orderQty)
 }
 

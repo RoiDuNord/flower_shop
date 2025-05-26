@@ -44,7 +44,7 @@ func Run(cfg config.Config) error {
 }
 
 func initContext() (context.Context, context.CancelFunc) {
-	return context.WithTimeout(context.Background(), 45*time.Second)
+	return context.WithTimeout(context.Background(), 400*time.Second)
 }
 
 func setupRoutes(s *handlers.Server, router *chi.Mux) {

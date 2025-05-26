@@ -3,25 +3,14 @@ package kafkapayment
 import (
 	"context"
 	"fmt"
-	"time"
-
-	"github.com/segmentio/kafka-go"
+	kfk "server/services/initReaderWriter"
 )
 
 func SendPaymentToKafka(ctx context.Context, orderQty int) {
-	writer := initWriter()
+	writer := kfk.InitWriter("PAYMENTS")
 	defer writer.Close()
 
 	producer(ctx, orderQty, writer)
 
 	fmt.Println("Payment function exiting.")
-}
-
-func initWriter() *kafka.Writer {
-	return kafka.NewWriter(kafka.WriterConfig{
-		Brokers:      []string{"localhost:9092"},
-		Topic:        "payments",
-		BatchSize:    1,
-		BatchTimeout: 1 * time.Millisecond,
-	})
 }

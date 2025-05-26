@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log/slog"
 	"server/models"
+	kfk "server/services/initReaderWriter"
 	"time"
 
 	"github.com/segmentio/kafka-go"
@@ -13,7 +14,7 @@ import (
 
 func Consumer(ctx context.Context, paymentChan chan models.Payment, unprocessedQty int) {
 	t := time.Now()
-	reader := initReader()
+	reader := kfk.InitReader("PAYMENTS")
 	slog.Info("kafka is ready for consuming")
 	defer reader.Close()
 	defer close(paymentChan)
@@ -34,14 +35,6 @@ func Consumer(ctx context.Context, paymentChan chan models.Payment, unprocessedQ
 
 	dur := time.Since(t)
 	fmt.Println("Payment", dur)
-}
-
-func initReader() *kafka.Reader {
-	return kafka.NewReader(kafka.ReaderConfig{
-		Brokers: []string{"localhost:9092"},
-		GroupID: "payments-consumer-group",
-		Topic:   "payments",
-	})
 }
 
 func consumeAndProcessMessage(ctx context.Context, reader *kafka.Reader, paymentChan chan models.Payment) error {
@@ -67,5 +60,3 @@ func paymentToChannel(message []byte, paymentChan chan models.Payment) error {
 	slog.Info("Processed payment", "payment", payment)
 	return nil
 }
-
-

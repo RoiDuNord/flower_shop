@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log/slog"
+	"server/config"
 
 	_ "github.com/lib/pq"
 )
@@ -41,4 +42,21 @@ func (d *Database) Close() error {
 		return fmt.Errorf("error closing database: %w", err)
 	}
 	return nil
+}
+
+func InitPostgres() (*Database, error) {
+	dbParams, err := config.GetDBParams()
+	if err != nil {
+		slog.Error("error getting DB parameters", "error", err)
+		return nil, err
+	}
+
+	database, err := Init(dbParams)
+	if err != nil {
+		slog.Error("error initializing database", "error", err)
+		return nil, err
+	}
+
+	slog.Info("database initialized successfully")
+	return database, nil
 }

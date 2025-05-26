@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log/slog"
 	"server/models"
+	kfk "server/services/initReaderWriter"
 	"time"
 
 	"github.com/segmentio/kafka-go"
@@ -13,7 +14,7 @@ import (
 
 func Consumer(ctx context.Context, orderChan chan models.Order, unprocessedQty int) {
 	t := time.Now()
-	reader := initReader()
+	reader := kfk.InitReader("ORDERS")
 	slog.Info("kafka is ready for consuming")
 	defer reader.Close()
 	defer close(orderChan)
@@ -35,14 +36,6 @@ func Consumer(ctx context.Context, orderChan chan models.Order, unprocessedQty i
 
 	dur := time.Since(t)
 	fmt.Println("Order", dur)
-}
-
-func initReader() *kafka.Reader {
-	return kafka.NewReader(kafka.ReaderConfig{
-		Brokers: []string{"localhost:9092"},
-		GroupID: "orders-consumer-group",
-		Topic:   "orders",
-	})
 }
 
 func consumeAndProcessMessage(ctx context.Context, reader *kafka.Reader, orderChan chan models.Order) error {

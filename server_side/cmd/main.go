@@ -9,9 +9,11 @@ import (
 )
 
 func main() {
-	file := logger.Init()
-	slog.Info("logger initialized")
-	defer file.Close()
+	logFile, err := logger.Init()
+	if err != nil {
+		return
+	}
+	defer logger.Close(logFile)
 	defer slog.Info("application has been shut down")
 
 	cfg, err := config.ParseConfig()
