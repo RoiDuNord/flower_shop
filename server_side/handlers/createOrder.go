@@ -47,7 +47,7 @@ func NewServer(cfg config.Config, ctx context.Context) (*Server, error) {
 		DB:  database,
 		RDB: rDB,
 		HTTPServer: &http.Server{
-			Addr: fmt.Sprintf("localhost:%d", cfg.Port),
+			Addr: fmt.Sprintf("localhost:%d", cfg.Port), // необходимо localhost?
 		},
 		Router: router,
 		Ctx:    ctx,

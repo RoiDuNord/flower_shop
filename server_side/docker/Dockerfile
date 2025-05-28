@@ -21,7 +21,6 @@ COPY --from=builder /app/services/kafkaPayment/payments /docker_app/services/kaf
 
 WORKDIR /docker_app
 
-EXPOSE 8080
+EXPOSE 9090
 
 CMD ["/docker_app/main"]
-
