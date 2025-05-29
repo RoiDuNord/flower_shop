@@ -4,11 +4,13 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
+	"strings"
+	"time"
 )
 
 type logger = *os.File
 
-func Init() (logger, error) {
+func Init(logLevel string) (logger, error) {
 	logDir, logFile := "logger", "logger.log"
 	logPath := filepath.Join(logDir, logFile)
 
@@ -21,16 +23,23 @@ func Init() (logger, error) {
 		return nil, err
 	}
 
+	msk, err := time.LoadLocation("Europe/Moscow")
+	if err != nil {
+		return nil, err
+	}
+
 	opts := &slog.HandlerOptions{
 		AddSource: true,
 		ReplaceAttr: func(groups []string, a slog.Attr) slog.Attr {
 			if a.Key == slog.TimeKey {
-				formattedTime := a.Value.Time().Format("15:04:05")
+				formattedTime := a.Value.Time().In(msk).Format("2006-01-02 15:04:05")
 				return slog.String(slog.TimeKey, formattedTime)
 			}
 			return a
 		},
+		Level: parseLogLevel(logLevel),
 	}
+
 	logger := slog.New(slog.NewJSONHandler(file, opts))
 	slog.SetDefault(logger)
 
@@ -47,4 +56,19 @@ func Close(logger logger) error {
 		slog.Info("logger closed successfully")
 	}
 	return nil
+}
+
+func parseLogLevel(level string) slog.Level {
+	switch strings.ToUpper(level) {
+	case "DEBUG":
+		return slog.LevelDebug
+	case "INFO":
+		return slog.LevelInfo
+	case "WARN":
+		return slog.LevelWarn
+	case "ERROR":
+		return slog.LevelError
+	default:
+		return slog.LevelInfo
+	}
 }

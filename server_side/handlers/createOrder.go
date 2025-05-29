@@ -47,9 +47,10 @@ func NewServer(cfg config.Config, ctx context.Context) (*Server, error) {
 		DB:  database,
 		RDB: rDB,
 		HTTPServer: &http.Server{
-			Addr: fmt.Sprintf("localhost:%d", cfg.Port), // необходимо localhost?
+			Addr: fmt.Sprintf(":%d", cfg.Port), 
+			Handler: router,// зачему повтор?
 		},
-		Router: router,
+		Router: router, // зачем это тут
 		Ctx:    ctx,
 	}
 
@@ -142,7 +143,7 @@ func (s *Server) combineOrders(wg *sync.WaitGroup, orderChan chan models.Order, 
 func (s *Server) processOrder(rawOrder models.Order, payments map[int]models.Payment, w http.ResponseWriter) {
 	processedOrder, err := bl.ProcessOrder(s.Ctx, s.DB, rawOrder)
 	if err != nil {
-		slog.Error(fmt.Sprintf("error processing order: %e", err))
+		slog.Error("error processing order", "error", err)
 		return
 	}
 
@@ -197,3 +198,4 @@ func addPayment(payment models.Payment, order *models.Order) {
 		order.PaymentStatus = "Не оплачено"
 	}
 }
+

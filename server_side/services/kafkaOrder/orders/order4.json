@@ -4,7 +4,7 @@
         "bouquet": [
             {
                 "name": "Роза",
-                "color": "Жёлтая",
+                "color": "Желтая",
                 "quantity": 11
             },
             {
@@ -38,7 +38,7 @@
         ],
         "decoration": {
             "postcard": {
-                "message": "С Днём Влюбленных!"
+                "message": "С Днем Влюбленных!"
             },
             "pack": {
                 "material": "Лента"

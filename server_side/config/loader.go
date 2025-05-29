@@ -8,8 +8,8 @@ import (
 )
 
 type Config struct {
-	Port     int    `json:"port"`
-	LogLevel string `json:"logLevel"`
+	Port     int    `yaml:"port"`
+	LogLevel string `yaml:"logLevel"`
 }
 
 func loadFromFile(fileName string) (Config, error) {
@@ -27,3 +27,4 @@ func loadFromFile(fileName string) (Config, error) {
 
 	return cfg, nil
 }
+

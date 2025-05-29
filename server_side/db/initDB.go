@@ -34,7 +34,14 @@ func Init(params []string) (*Database, error) {
 
 	slog.Info("connected to the database")
 
-	return &Database{db: db}, nil
+	database := &Database{db: db}
+
+	if err := database.createDB(); err != nil {
+		_ = database.Close()
+		return nil, fmt.Errorf("failed to create tables and seed data: %w", err)
+	}
+
+	return database, nil
 }
 
 func (d *Database) Close() error {
@@ -42,6 +49,10 @@ func (d *Database) Close() error {
 		return fmt.Errorf("error closing database: %w", err)
 	}
 	return nil
+}
+
+func (d *Database) DB() *sql.DB {
+	return d.db
 }
 
 func InitPostgres() (*Database, error) {

@@ -4,21 +4,21 @@
         "bouquet": [
             {
                 "name": "Роза",
-                "color": "Жёлтая",
+                "color": "Желтая",
                 "quantity": 15
             },
             {
                 "name": "Лилия",
-                "color": "Жёлтая",
+                "color": "Желтая",
                 "quantity": 6
             }
         ],
         "decoration": {
             "postcard": {
-                "message": "С Днём рождения!"
+                "message": "С Днем рождения!"
             },
             "pack": {
-                "material": "Плёнка"
+                "material": "Пленка"
             }
         }
     },
@@ -50,7 +50,7 @@
         "bouquet": [
             {
                 "name": "Лилия",
-                "color": "Жёлтая",
+                "color": "Желтая",
                 "quantity": 10
             },
             {
@@ -84,10 +84,10 @@
         ],
         "decoration": {
             "postcard": {
-                "message": "С Днём Влюбленных!"
+                "message": "С Днем Влюбленных!"
             },
             "pack": {
-                "material": "Плёнка"
+                "material": "Пленка"
             }
         }
     },

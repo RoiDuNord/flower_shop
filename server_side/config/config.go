@@ -6,8 +6,14 @@ import (
 	"os"
 )
 
+var parseCount int
+
 func ParseConfig() (Config, error) {
-	slog.Info("checking for config file", "file", "config.yaml")
+	slog.SetDefault(slog.New(slog.NewTextHandler(os.Stderr, nil)))
+
+	parseCount++
+	slog.Info("checking for config file", "file", "config.yaml", "call_number", parseCount)
+	// slog.Info("checking for config file", "file", "config.yaml")
 
 	if _, err := os.Stat("config.yaml"); os.IsNotExist(err) {
 		slog.Error("config file not found", "file", "config.yaml")
