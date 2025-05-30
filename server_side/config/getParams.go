@@ -7,22 +7,26 @@ import (
 	"github.com/joho/godotenv"
 )
 
-
-func getParams(prefix string, requiredKeys []string) ([]string, error) {
+func getParams(prefix string, requiredKeys []string) (map[string]string, error) {
 	myEnv, err := readEnv()
 	if err != nil {
 		return nil, err
 	}
 
 	envKeys := buildKeys(prefix, requiredKeys)
-	params, err := checkEnvValues(myEnv, envKeys)
-	if err != nil {
-		return nil, err
+
+	params := make(map[string]string, len(envKeys))
+	for _, key := range envKeys {
+		value, exists := myEnv[key]
+		if !exists || value == "" {
+			slog.Warn("environment variable missing or empty", "key", key)
+			return nil, fmt.Errorf("missing or empty value for environment variable: %s", key)
+		}
+		params[key[len(prefix)+1:]] = value
 	}
 
 	return params, nil
 }
-
 
 func readEnv() (map[string]string, error) {
 	myEnv, err := godotenv.Read()
@@ -41,19 +45,4 @@ func buildKeys(prefix string, requiredKeys []string) []string {
 	}
 
 	return keys
-}
-
-func checkEnvValues(myEnv map[string]string, envKeys []string) ([]string, error) {
-	params := make([]string, 0, len(envKeys))
-
-	for _, key := range envKeys {
-		if value, exists := myEnv[key]; !exists || value == "" {
-			slog.Warn("environment variable missing or empty", "key", key)
-			return nil, fmt.Errorf("missing or empty value for environment variable: %s", key)
-		} else {
-			params = append(params, value)
-		}
-	}
-
-	return params, nil
 }

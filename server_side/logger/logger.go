@@ -14,17 +14,24 @@ func Init(logLevel string) (logger, error) {
 	logDir, logFile := "logger", "logger.log"
 	logPath := filepath.Join(logDir, logFile)
 
+	slog.Info("initializing logger")
+
 	if err := os.MkdirAll(logDir, os.ModePerm); err != nil {
+		slog.Error("failed to create log directory", "path", logDir, "error", err)
 		return nil, err
 	}
+	slog.Debug("log directory created or already exists", "path", logDir)
 
 	file, err := os.OpenFile(logPath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0666)
 	if err != nil {
+		slog.Error("failed to open log file", "path", logPath, "error", err)
 		return nil, err
 	}
+	slog.Debug("log file opened", "path", logPath)
 
 	msk, err := time.LoadLocation("Europe/Moscow")
 	if err != nil {
+		slog.Error("failed to load timezone", "timezone", "Europe/Moscow", "error", err)
 		return nil, err
 	}
 
@@ -32,7 +39,7 @@ func Init(logLevel string) (logger, error) {
 		AddSource: true,
 		ReplaceAttr: func(groups []string, a slog.Attr) slog.Attr {
 			if a.Key == slog.TimeKey {
-				formattedTime := a.Value.Time().In(msk).Format("2006-01-02 15:04:05")
+				formattedTime := a.Value.Time().In(msk).Format("15:04:05")
 				return slog.String(slog.TimeKey, formattedTime)
 			}
 			return a
@@ -43,11 +50,13 @@ func Init(logLevel string) (logger, error) {
 	logger := slog.New(slog.NewJSONHandler(file, opts))
 	slog.SetDefault(logger)
 
-	logger.Info("logger initialized successfully", slog.String("module", "logger"))
+	logger.Info("logger initialized successfully", "module", "logger")
+
 	return file, nil
 }
 
 func Close(logger logger) error {
+	slog.Info("closing logger")
 	if logger != nil {
 		if err := logger.Close(); err != nil {
 			slog.Error("failed to close logger", "error", err)
@@ -69,6 +78,7 @@ func parseLogLevel(level string) slog.Level {
 	case "ERROR":
 		return slog.LevelError
 	default:
+		slog.Warn("unknown log level provided, falling back to INFO", "provided", level)
 		return slog.LevelInfo
 	}
 }

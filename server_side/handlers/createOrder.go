@@ -44,14 +44,15 @@ func NewServer(cfg config.Config, ctx context.Context) (*Server, error) {
 	router := chi.NewRouter()
 
 	s := &Server{
-		DB:  database,
-		RDB: rDB,
-		HTTPServer: &http.Server{
-			Addr: fmt.Sprintf(":%d", cfg.Port), 
-			Handler: router,// зачему повтор?
-		},
-		Router: router, // зачем это тут
+		DB:     database,
+		RDB:    rDB,
+		Router: router,
 		Ctx:    ctx,
+	}
+
+	s.HTTPServer = &http.Server{
+		Addr:    fmt.Sprintf(":%d", cfg.Port),
+		Handler: router,
 	}
 
 	slog.Info("server created successfully", "address", s.HTTPServer.Addr)
@@ -93,6 +94,10 @@ func (s *Server) CreateOrder(w http.ResponseWriter, r *http.Request) {
 	go s.combineOrders(&wg, orderChan, payments, w)
 
 	wg.Wait()
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(`{"status":"all orders successfully processed"}`))
 }
 
 func initChannels(orderQty int) (chan models.Order, chan models.Payment) {
@@ -100,19 +105,29 @@ func initChannels(orderQty int) (chan models.Order, chan models.Payment) {
 }
 
 func (s *Server) consumeOrders(wg *sync.WaitGroup, orderChan chan models.Order) {
+	cfg, err := config.GetKafkaParams("ORDERS")
+	if err != nil {
+		slog.Error("failed to load kafka configs", "error", err)
+	}
+
 	defer wg.Done()
 	slog.Info("consumeOrders started")
 	defer slog.Info("consumeOrders finished")
 
 	start := time.Now()
 
-	ko.Consumer(s.Ctx, orderChan, cap(orderChan))
+	ko.Consumer(s.Ctx, cfg, orderChan, cap(orderChan))
 
 	duration := time.Since(start)
 	fmt.Printf("consumeOrders took %s\n", duration)
 }
 
 func (s *Server) consumePayments(wg *sync.WaitGroup, paymentChan chan models.Payment) {
+	cfg, err := config.GetKafkaParams("PAYMENTS")
+	if err != nil {
+		slog.Error("failed to load kafka configs", "error", err)
+	}
+
 	defer wg.Done()
 
 	slog.Info("consumePayments started")
@@ -120,7 +135,7 @@ func (s *Server) consumePayments(wg *sync.WaitGroup, paymentChan chan models.Pay
 
 	start := time.Now()
 
-	kp.Consumer(s.Ctx, paymentChan, cap(paymentChan))
+	kp.Consumer(s.Ctx, cfg, paymentChan, cap(paymentChan))
 
 	duration := time.Since(start)
 	fmt.Printf("consumePayments took %s\n", duration)
@@ -198,4 +213,3 @@ func addPayment(payment models.Payment, order *models.Order) {
 		order.PaymentStatus = "Не оплачено"
 	}
 }
-

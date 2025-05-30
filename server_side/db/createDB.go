@@ -1,308 +1,67 @@
-// import (
-// 	"database/sql"
-// 	"fmt"
-// 	"log"
-// 	"which/models"
-
-// 	_ "github.com/lib/pq"
-// )
-
-// var db *sql.DB
-
-// func main() {
-// 	var err error
-
-// 	connStr := "user=florist dbname=flower_shop sslmode=disable" // Замените 'yourusername' и 'yourdbname' на ваши значения
-// 	db, err = sql.Open("postgres", connStr)
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
-// 	defer db.Close()
-// 	Create()
-// }
-
-// func Create() {
-
-// 	createFlowersTable := `
-//     CREATE TABLE IF NOT EXISTS flowers (
-//         id SERIAL PRIMARY KEY,
-//         name VARCHAR(100),
-//         color VARCHAR(50),
-//         cost INT,
-//         quantity INT
-//     );`
-
-// 	createPostcardsTable := `
-//     CREATE TABLE IF NOT EXISTS postcards (
-//         id SERIAL PRIMARY KEY,
-//         note TEXT,
-//         cost INT
-//     );`
-
-// 	createPacksTable := `
-//     CREATE TABLE IF NOT EXISTS packs (
-//         id SERIAL PRIMARY KEY,
-//         material VARCHAR(100),
-//         cost INT
-//     );`
-
-// 	var err error
-
-// 	_, err = db.Exec(createFlowersTable)
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
-
-// 	_, err = db.Exec(createPostcardsTable)
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
-
-// 	_, err = db.Exec(createPacksTable)
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
-
-// 	flowers, postcards, packs := initializeData()
-
-// 	for _, flower := range flowers {
-// 		insertFlowerSQL := `INSERT INTO flowers (name, color, cost, quantity) VALUES ($1, $2, $3, $4)`
-// 		_, err = db.Exec(insertFlowerSQL, flower.Name, flower.Color, flower.Cost, flower.Quantity)
-// 		if err != nil {
-// 			log.Fatal(err)
-// 		}
-// 	}
-// 	fmt.Println("Flowers data inserted successfully!")
-
-// 	for _, postcard := range postcards {
-// 		insertPostcardSQL := `INSERT INTO postcards (note, cost) VALUES ($1, $2)`
-// 		_, err = db.Exec(insertPostcardSQL, postcard.Message, postcard.Cost)
-// 		if err != nil {
-// 			log.Fatal(err)
-// 		}
-// 	}
-// 	fmt.Println("Postcards data inserted successfully!")
-
-// 	for _, pack := range packs {
-// 		insertPackSQL := `INSERT INTO packs (material, cost) VALUES ($1, $2)`
-// 		_, err = db.Exec(insertPackSQL, pack.Material, pack.Cost)
-// 		if err != nil {
-// 			log.Fatal(err)
-// 		}
-// 	}
-// 	fmt.Println("Packs data inserted successfully!")
-// }
-
-// package main
-
-// import (
-// 	"context"
-// 	"time"
-// 	order "which/orderToKafka"
-// )
-
-// func main() {
-// 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*20)
-// 	defer cancel()
-
-// 	orderQty := 5
-
-// 	getOrderData(ctx, orderQty)
-// }
-
-// func getOrderData(ctx context.Context, orderQty int) {
-// 	orderChan := make(chan order.Order)
-
-// 	order.OrderToKafka(ctx, orderQty, orderChan)
-// }
-
-// var id int
-// var flowers, postcards, packs = initializeData()
-
-// func makeOrder() ([]byte, error) {
-// 	flowers1 := []models.Flower{flowers["yellowRose"], flowers["yellowLily"]}
-// 	flowers1[0].Quantity, flowers1[1].Quantity = 3, 4
-// 	decoration1 := models.Decoration{Postcard: postcards["womenDay"], Pack: packs["craft"]}
-// 	cost1 := bouquetCost(flowers1, decoration1)
-
-// 	flowers2 := []models.Flower{flowers["daisy"], flowers["whitePion"]}
-// 	flowers2[0].Quantity, flowers2[1].Quantity = 50, 5
-// 	decoration2 := models.Decoration{Postcard: postcards["valentineDay"], Pack: packs["tape"]}
-// 	cost2 := bouquetCost(flowers2, decoration2)
-
-// 	bouquet1 := models.Bouquet{
-// 		Position:   nextID(),
-// 		Flowers:    flowers1,
-// 		BouquetCost:       cost1,
-// 		Decoration: decoration1,
-// 	}
-
-// 	bouquet2 := models.Bouquet{
-// 		Position:   nextID(),
-// 		Flowers:    flowers2,
-// 		BouquetCost:       cost2,
-// 		Decoration: decoration2,
-// 	}
-
-// 	bouquets := make([]models.Bouquet, 0)
-// 	bouquets = append(bouquets, bouquet1, bouquet2)
-
-// 	jsonData, err := json.MarshalIndent(bouquets, "", "   ")
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	return jsonData, nil
-// }
-
-// func nextID() int {
-// 	id++
-// 	return id
-// }
-
-// func bouquetCost(flowersAr []models.Flower, decoration models.Decoration) (cost int) {
-// 	for _, flower := range flowersAr {
-// 		cost += flower.Cost * flower.Quantity
-// 	}
-// 	cost += decoration.Pack.Cost + decoration.Postcard.Cost
-// 	return cost
-// }
-
-// package db
-
-// import (
-// 	"database/sql"
-// 	"fmt"
-// 	"log"
-// 	"server/models"
-
-// 	_ "github.com/lib/pq"
-// )
-
-// var db *sql.DB
-
-// func main() { // должно быть названо не мейн
-// 	var err error
-
-// 	connStr := "user=florist dbname=flower_shop sslmode=disable"
-// 	db, err = sql.Open("postgres", connStr)
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
-// 	defer db.Close()
-// 	createDB()
-// }
-
-// func createDB() {
-// 	createFlowersTable := `
-//     CREATE TABLE IF NOT EXISTS flowers (
-//         id SERIAL PRIMARY KEY,
-//         name VARCHAR(100),
-//         color VARCHAR(50),
-//         cost INT,
-//         quantity INT
-//     );`
-
-// 	createPostcardsTable := `
-//     CREATE TABLE IF NOT EXISTS postcards (
-//         id SERIAL PRIMARY KEY,
-//         note TEXT,
-//         cost INT
-//     );`
-
-// 	createPacksTable := `
-//     CREATE TABLE IF NOT EXISTS packs (
-//         id SERIAL PRIMARY KEY,
-//         material VARCHAR(100),
-//         cost INT
-//     );`
-
-// 	var err error
-
-// 	_, err = db.Exec(createFlowersTable)
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
-
-// 	_, err = db.Exec(createPostcardsTable)
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
-
-// 	_, err = db.Exec(createPacksTable)
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
-
-// 	flowers, postcards, packs := initializeData()
-
-// 	for _, flower := range flowers {
-// 		insertFlowerSQL := `INSERT INTO flowers (name, color, cost, quantity) VALUES ($1, $2, $3, $4)`
-// 		_, err = db.Exec(insertFlowerSQL, flower.Name, flower.Color, flower.Cost, flower.Quantity)
-// 		if err != nil {
-// 			log.Fatal(err)
-// 		}
-// 	}
-// 	fmt.Println("Flowers data inserted successfully!")
-
-// 	for _, postcard := range postcards {
-// 		insertPostcardSQL := `INSERT INTO postcards (note, cost) VALUES ($1, $2)`
-// 		_, err = db.Exec(insertPostcardSQL, postcard.Message, postcard.Cost)
-// 		if err != nil {
-// 			log.Fatal(err)
-// 		}
-// 	}
-// 	fmt.Println("Postcards data inserted successfully!")
-
-// 	for _, pack := range packs {
-// 		insertPackSQL := `INSERT INTO packs (material, cost) VALUES ($1, $2)`
-// 		_, err = db.Exec(insertPackSQL, pack.Material, pack.Cost)
-// 		if err != nil {
-// 			log.Fatal(err)
-// 		}
-// 	}
-// 	fmt.Println("Packs data inserted successfully!")
-// }
-
-// func initializeData() (map[string]models.Flower, map[string]models.Postcard, map[string]models.Pack) {
-// 	flowers := map[string]models.Flower{
-// 		"redRose":    {Name: "Роза", Color: "Красная", Cost: 80, Quantity: 200},
-// 		"whiteRose":  {Name: "Роза", Color: "Белая", Cost: 60, Quantity: 200},
-// 		"yellowRose": {Name: "Роза", Color: "Желтая", Cost: 40, Quantity: 200},
-// 		"whiteLily":  {Name: "Лилия", Color: "Белая", Cost: 100, Quantity: 50},
-// 		"yellowLily": {Name: "Лилия", Color: "Желтая", Cost: 90, Quantity: 50},
-// 		"pinkPion":   {Name: "Пион", Color: "Розовый", Cost: 120, Quantity: 100},
-// 		"whitePion":  {Name: "Пион", Color: "Белый", Cost: 110, Quantity: 100},
-// 		"lotus":      {Name: "Лотос", Color: "Белый", Cost: 200, Quantity: 50},
-// 		"chamomile":  {Name: "Ромашка", Color: "Белая", Cost: 20, Quantity: 500},
-// 	}
-
-// 	postcards := map[string]models.Postcard{
-// 		"birthday":         {Message: "С Днём рождения!", Cost: 5},
-// 		"newYear":          {Message: "С Новым Годом!", Cost: 1},
-// 		"happyWedding":     {Message: "Со свадьбой!", Cost: 2},
-// 		"happyAnniversary": {Message: "С Юбилеем!", Cost: 3},
-// 		"womenDay":         {Message: "С 8 марта!", Cost: 15},
-// 		"valentineDay":     {Message: "С Днем Влюбленных!", Cost: 20},
-// 	}
-
-// 	packs := map[string]models.Pack{
-// 		"craft": {Material: "Крафт", Cost: 100},
-// 		"film":  {Material: "Пленка", Cost: 50},
-// 		"tape":  {Material: "Лента", Cost: 10},
-// 	}
-
-// 	return flowers, postcards, packs
-// }
-
 package db
 
 import (
+	"database/sql"
 	"fmt"
 	"log/slog"
+	"server/config"
 	"server/models"
 )
 
+func createDatabaseIfNotExists(params config.DBParams) error {
+	// Подключаемся к базе по умолчанию (postgres), чтобы создать новую базу
+	connStr := fmt.Sprintf(
+		"host=%s port=%s user=%s password=%s dbname=postgres sslmode=%s",
+		params.Host, params.Port, params.User, params.Password, params.SSLMode,
+	)
+	db, err := sql.Open("postgres", connStr)
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+
+	// Проверяем, есть ли база с нужным именем
+	var exists bool
+	err = db.QueryRow("SELECT EXISTS(SELECT 1 FROM pg_database WHERE datname=$1)", params.Name).Scan(&exists)
+	if err != nil {
+		return err
+	}
+
+	if !exists {
+		slog.Info("database does not exist, creating", "name", params.Name)
+		_, err = db.Exec("CREATE DATABASE " + params.Name)
+		if err != nil {
+			return fmt.Errorf("failed to create database: %w", err)
+		}
+	} else {
+		slog.Info("database exists", "name", params.Name)
+	}
+	return nil
+}
+
+
 func (d *Database) createDB() error {
+	if err := d.createTables(); err != nil {
+		return err
+	}
+
+	flowers, postcards, packs := initializeData()
+
+	if err := d.insertFlowers(flowers); err != nil {
+		return err
+	}
+	if err := d.insertPostcards(postcards); err != nil {
+		return err
+	}
+	if err := d.insertPacks(packs); err != nil {
+		return err
+	}
+
+	slog.Info("database schema created and initial data inserted successfully")
+	return nil
+}
+
+func (d *Database) createTables() error {
 	queries := []string{
 		`CREATE TABLE IF NOT EXISTS flowers (
 			id SERIAL PRIMARY KEY,
@@ -313,7 +72,7 @@ func (d *Database) createDB() error {
 		);`,
 		`CREATE TABLE IF NOT EXISTS postcards (
 			id SERIAL PRIMARY KEY,
-			note TEXT,
+			message TEXT,
 			cost INT
 		);`,
 		`CREATE TABLE IF NOT EXISTS packs (
@@ -328,10 +87,20 @@ func (d *Database) createDB() error {
 			return fmt.Errorf("error executing query: %w", err)
 		}
 	}
+	return nil
+}
 
-	flowers, postcards, packs := initializeData()
-
+func (d *Database) insertFlowers(flowers []models.Flower) error {
 	for _, flower := range flowers {
+		exists, err := d.existsFlower(flower.Name, flower.Color)
+		if err != nil {
+			return err
+		}
+		if exists {
+			slog.Info("flower already exists, skipping insert", "name", flower.Name, "color", flower.Color)
+			continue
+		}
+
 		if _, err := d.db.Exec(
 			`INSERT INTO flowers (name, color, cost, quantity) VALUES ($1, $2, $3, $4)`,
 			flower.Name, flower.Color, flower.Cost, flower.Quantity,
@@ -339,8 +108,29 @@ func (d *Database) createDB() error {
 			return fmt.Errorf("inserting flower failed: %w", err)
 		}
 	}
+	return nil
+}
 
+func (d *Database) existsFlower(name, color string) (bool, error) {
+	var exists bool
+	err := d.db.QueryRow(
+		`SELECT EXISTS(SELECT 1 FROM flowers WHERE name = $1 AND color = $2)`,
+		name, color,
+	).Scan(&exists)
+	return exists, err
+}
+
+func (d *Database) insertPostcards(postcards []models.Postcard) error {
 	for _, postcard := range postcards {
+		exists, err := d.existsPostcard(postcard.Message)
+		if err != nil {
+			return err
+		}
+		if exists {
+			slog.Info("postcard already exists, skipping insert", "message", postcard.Message)
+			continue
+		}
+
 		if _, err := d.db.Exec(
 			`INSERT INTO postcards (message, cost) VALUES ($1, $2)`,
 			postcard.Message, postcard.Cost,
@@ -348,8 +138,29 @@ func (d *Database) createDB() error {
 			return fmt.Errorf("inserting postcard failed: %w", err)
 		}
 	}
+	return nil
+}
 
+func (d *Database) existsPostcard(message string) (bool, error) {
+	var exists bool
+	err := d.db.QueryRow(
+		`SELECT EXISTS(SELECT 1 FROM postcards WHERE message = $1)`,
+		message,
+	).Scan(&exists)
+	return exists, err
+}
+
+func (d *Database) insertPacks(packs []models.Pack) error {
 	for _, pack := range packs {
+		exists, err := d.existsPack(pack.Material)
+		if err != nil {
+			return err
+		}
+		if exists {
+			slog.Info("pack already exists, skipping insert", "material", pack.Material)
+			continue
+		}
+
 		if _, err := d.db.Exec(
 			`INSERT INTO packs (material, cost) VALUES ($1, $2)`,
 			pack.Material, pack.Cost,
@@ -357,32 +168,118 @@ func (d *Database) createDB() error {
 			return fmt.Errorf("inserting pack failed: %w", err)
 		}
 	}
-
-	slog.Info("database schema created and initial data inserted successfully")
 	return nil
 }
 
-func initializeData() (map[string]models.Flower, map[string]models.Postcard, map[string]models.Pack) {
-	return map[string]models.Flower{
-			"redRose":    {Name: "Роза", Color: "Красная", Cost: 80, Quantity: 200},
-			"whiteRose":  {Name: "Роза", Color: "Белая", Cost: 60, Quantity: 200},
-			"yellowRose": {Name: "Роза", Color: "Желтая", Cost: 40, Quantity: 200},
-			"whiteLily":  {Name: "Лилия", Color: "Белая", Cost: 100, Quantity: 50},
-			"yellowLily": {Name: "Лилия", Color: "Желтая", Cost: 90, Quantity: 50},
-			"pinkPion":   {Name: "Пион", Color: "Розовый", Cost: 120, Quantity: 100},
-			"whitePion":  {Name: "Пион", Color: "Белый", Cost: 110, Quantity: 100},
-			"lotus":      {Name: "Лотос", Color: "Белый", Cost: 200, Quantity: 50},
-			"chamomile":  {Name: "Ромашка", Color: "Белая", Cost: 20, Quantity: 500},
-		}, map[string]models.Postcard{
-			"birthday":         {Message: "С Днем рождения!", Cost: 5},
-			"newYear":          {Message: "С Новым Годом!", Cost: 1},
-			"happyWedding":     {Message: "Со свадьбой!", Cost: 2},
-			"happyAnniversary": {Message: "С Юбилеем!", Cost: 3},
-			"womenDay":         {Message: "С 8 марта!", Cost: 15},
-			"valentineDay":     {Message: "С Днем Влюбленных!", Cost: 20},
-		}, map[string]models.Pack{
-			"craft": {Material: "Крафт", Cost: 100},
-			"film":  {Material: "Пленка", Cost: 50},
-			"tape":  {Material: "Лента", Cost: 10},
+func (d *Database) existsPack(material string) (bool, error) {
+	var exists bool
+	err := d.db.QueryRow(
+		`SELECT EXISTS(SELECT 1 FROM packs WHERE material = $1)`,
+		material,
+	).Scan(&exists)
+	return exists, err
+}
+
+func initializeData() ([]models.Flower, []models.Postcard, []models.Pack) {
+	return []models.Flower{
+			{Name: "Роза", Color: "Красная", Cost: 80, Quantity: 200},
+			{Name: "Роза", Color: "Белая", Cost: 60, Quantity: 200},
+			{Name: "Роза", Color: "Желтая", Cost: 40, Quantity: 200},
+			{Name: "Лилия", Color: "Белая", Cost: 100, Quantity: 50},
+			{Name: "Лилия", Color: "Желтая", Cost: 90, Quantity: 50},
+			{Name: "Пион", Color: "Розовый", Cost: 120, Quantity: 100},
+			{Name: "Пион", Color: "Белый", Cost: 110, Quantity: 100},
+			{Name: "Лотос", Color: "Белый", Cost: 200, Quantity: 50},
+			{Name: "Ромашка", Color: "Белая", Cost: 20, Quantity: 500},
+		}, []models.Postcard{
+			{Message: "С Днем рождения!", Cost: 5},
+			{Message: "С Новым Годом!", Cost: 1},
+			{Message: "Со свадьбой!", Cost: 2},
+			{Message: "С Юбилеем!", Cost: 3},
+			{Message: "С 8 марта!", Cost: 15},
+			{Message: "С Днем Влюбленных!", Cost: 20},
+		}, []models.Pack{
+			{Material: "Крафт", Cost: 100},
+			{Material: "Пленка", Cost: 50},
+			{Material: "Лента", Cost: 10},
 		}
 }
+
+// надо, чтобы создавал при входе такую бд с этими данными, если она не создана
+// # PostgreSQL configuration
+// DB_HOST=db
+// DB_PORT=5432
+// DB_USER=florist
+// DB_PASSWORD=Magician1337
+// DB_NAME=flower_shop
+// DB_SSLMODE=disable
+
+// package db
+
+// import (
+// 	"database/sql"
+// 	"fmt"
+// 	"log/slog"
+// 	"server/config"
+
+// 	_ "github.com/lib/pq"
+// )
+
+// type Database struct {
+// 	db *sql.DB
+// }
+
+// func Init(params config.DBParams) (*Database, error) {
+// 	psqlInfo := fmt.Sprintf(
+// 		"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
+// 		params.Host, params.Port, params.User, params.Password, params.Name, params.SSLMode,
+// 	)
+
+// 	db, err := sql.Open("postgres", psqlInfo)
+// 	if err != nil {
+// 		return nil, fmt.Errorf("error opening database: %w", err)
+// 	}
+
+// 	if err = db.Ping(); err != nil {
+// 		return nil, fmt.Errorf("error connecting to the database: %w", err)
+// 	}
+
+// 	slog.Info("connected to the database")
+
+// 	database := &Database{db: db}
+
+// 	if err := database.createDB(); err != nil {
+// 		_ = database.Close()
+// 		return nil, fmt.Errorf("failed to create tables and seed data: %w", err)
+// 	}
+
+// 	return database, nil
+// }
+
+// func (d *Database) Close() error {
+// 	if err := d.db.Close(); err != nil {
+// 		return fmt.Errorf("error closing database: %w", err)
+// 	}
+// 	return nil
+// }
+
+// func (d *Database) DB() *sql.DB {
+// 	return d.db
+// }
+
+// func InitPostgres() (*Database, error) {
+// 	dbParams, err := config.GetDBParams()
+// 	if err != nil {
+// 		slog.Error("error getting DB parameters", "error", err)
+// 		return nil, err
+// 	}
+
+// 	database, err := Init(dbParams)
+// 	if err != nil {
+// 		slog.Error("error initializing database", "error", err)
+// 		return nil, err
+// 	}
+
+// 	slog.Info("database initialized successfully")
+// 	return database, nil
+// }

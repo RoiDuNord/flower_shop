@@ -66,7 +66,7 @@ func sendOrderToKafka(ctx context.Context, order models.Order, writer *kafka.Wri
 		return fmt.Errorf("failed to write order %d to Kafka: %w", order.ID, err)
 	}
 
-	slog.Info("order sent to Kafka")
+	slog.Info("order sent to Kafka", "len", len(order.BouquetsList))
 	return nil
 }
 
@@ -89,3 +89,4 @@ func getFilePath(orderNumber int) (string, error) {
 	}
 	return filepath.Join(cwd, "services", "kafkaOrder", "orders", fmt.Sprintf("order%d.json", orderNumber)), nil
 }
+

@@ -10,15 +10,15 @@ import (
 )
 
 func redisClient() (*redis.Client, error) {
-	redisParams, err := config.GetRedisParams()
+	params, err := config.GetRedisParams()
 	if err != nil {
 		slog.Error("error getting Redis parameters", "error", err)
 		return nil, err
 	}
 
 	rdb := redis.NewClient(&redis.Options{
-		Addr:     fmt.Sprintf("%s:%s", redisParams[0], redisParams[1]),
-		Password: fmt.Sprintf("%s", redisParams[2]),
+		Addr:     fmt.Sprintf("%s:%s", params.Host, params.Port),
+		Password: fmt.Sprintf("%s", params.Password),
 	})
 
 	return rdb, nil

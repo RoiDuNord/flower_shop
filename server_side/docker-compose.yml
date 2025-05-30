@@ -111,7 +111,7 @@ services:
       - .env
     ports:
       - "${APP_PORT}:${APP_PORT}"
-    restart: always
+    restart: no
     networks:
       - app-net
 

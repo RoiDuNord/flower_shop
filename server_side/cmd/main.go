@@ -12,28 +12,45 @@ func main() {
 	cfg, err := config.ParseConfig()
 	if err != nil {
 		return
-	} // дальше этой строки не идет
-
-	slog.Info("here") //
+	}
 
 	if cfg == (config.Config{}) {
 		slog.Warn("empty config")
 	}
 
-	slog.Info("here 2")
-
 	logFile, err := logger.Init(cfg.LogLevel)
 	if err != nil {
+		slog.Error(err.Error())
 		return
 	}
 	defer logger.Close(logFile)
 	defer slog.Info("application has been shut down")
 
-	slog.Info("here 3") // только сюда не доходит
-
-	slog.Info("before server.Run")
 	if err := server.Run(cfg); err != nil {
-		slog.Error("server.Run returned error", "error", err)
+		return
 	}
-	slog.Info("after server.Run")
+
 }
+
+// func main() {
+// 	cfg, err := config.ParseConfig()
+// 	if err != nil {
+// 		return
+// 	}
+
+// 	if cfg == (config.Config{}) {
+// 		slog.Warn("empty config")
+// 	}
+
+// 	logger, err := logger.Init(cfg.LogLevel)
+// 	if err != nil {
+// 		return
+// 	}
+// 	slog.Info("logger initialized")
+// 	defer logger.Close()
+// 	defer slog.Info("shutting down application")
+
+// 	if err := server.Run(cfg); err != nil {
+// 		return
+// 	}
+// }

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
+	"server/config"
 	"server/models"
 	kfk "server/services/initReaderWriter"
 	"time"
@@ -12,10 +13,11 @@ import (
 	"github.com/segmentio/kafka-go"
 )
 
-func Consumer(ctx context.Context, paymentChan chan models.Payment, unprocessedQty int) {
+func Consumer(ctx context.Context, cfg config.KafkaParams, paymentChan chan models.Payment, unprocessedQty int) {
 	t := time.Now()
-	reader := kfk.InitReader("PAYMENTS")
-	slog.Info("kafka is ready for consuming")
+
+	reader := kfk.InitReader(cfg)
+	slog.Info("kafka-payments is ready for consuming")
 	defer reader.Close()
 	defer close(paymentChan)
 
@@ -42,6 +44,7 @@ func consumeAndProcessMessage(ctx context.Context, reader *kafka.Reader, payment
 	if err != nil {
 		return fmt.Errorf("error reading payment: %w", err)
 	}
+	fmt.Println("message", string(message.Value))
 
 	if err := reader.CommitMessages(ctx, message); err != nil {
 		return fmt.Errorf("error committing payment: %w", err)
@@ -52,6 +55,7 @@ func consumeAndProcessMessage(ctx context.Context, reader *kafka.Reader, payment
 
 func paymentToChannel(message []byte, paymentChan chan models.Payment) error {
 	var payment models.Payment
+
 	if err := json.Unmarshal(message, &payment); err != nil {
 		return fmt.Errorf("error unmarshaling payment: %w", err)
 	}

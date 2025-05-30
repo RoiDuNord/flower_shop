@@ -13,16 +13,17 @@ type Database struct {
 	db *sql.DB
 }
 
-func Init(params []string) (*Database, error) {
-	if len(params) < 6 {
-		return nil, fmt.Errorf("not enough parameters provided")
+func Init(params config.DBParams) (*Database, error) {
+	// Создаем базу, если ее нет
+	if err := createDatabaseIfNotExists(params); err != nil {
+		return nil, err
 	}
 
-	host, port, user, password, dbname, sslmode := params[0], params[1], params[2], params[3], params[4], params[5]
-
-	psqlInfo := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
-		host, port, user, password, dbname, sslmode)
-
+	// Подключаемся к нужной базе (flower_shop)
+	psqlInfo := fmt.Sprintf(
+		"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
+		params.Host, params.Port, params.User, params.Password, params.Name, params.SSLMode,
+	)
 	db, err := sql.Open("postgres", psqlInfo)
 	if err != nil {
 		return nil, fmt.Errorf("error opening database: %w", err)
