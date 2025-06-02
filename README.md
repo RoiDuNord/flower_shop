@@ -6,7 +6,7 @@
 
 Ниже представлена схема архитектуры проекта:
 
-![Схема архитектуры](.architecture-diagram.svg)
+![Схема архитектуры](https://github.com/RoiDuNord/flower_shop/blob/master/architecture-diagram.png)
 
 ## Как запустить
 
