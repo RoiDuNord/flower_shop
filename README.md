@@ -9,10 +9,10 @@
 
 ## Описание
 
-Проект представляет собой разработанный на Golang микросервисный RESTful API backend для цветочного магазина с использованием Kafka, Redis, PostgreSQL, Сhi и развёрнуто на Docker. Весь процесс логируется.
+Проект представляет собой разработанный на Golang микросервисный RESTful API backend для цветочного магазина с использованием Kafka, Redis, PostgreSQL, Сhi и развёрнутый на Docker. Весь процесс логируется.
 В проекте использовал горутины и каналы для параллельной обработки задач и Postman для тестирования и отладки API.
 
-## Архитектура системы
+## Архитектура приложения
 
 ![Схема архитектуры](https://github.com/RoiDuNord/flower_shop/blob/master/architecture-diagram.svg)
 
@@ -47,13 +47,13 @@ cd server_side
 docker-compose up -d --build
 ```
 
-3. Проверьте работу приложения: Используйте Postman или любой другой HTTP-клиент для отправки запросов к вашему API
+3. Проверьте работу приложения с помощью Postman или другого HTTP-клиента для отправки запросов к API
 
 - Создайте заказы
 ```
-POST [Create Orders](http://localhost:8080/orders/create)
+POST http://localhost:8080/orders/create
 ```
 - Просмотр готовых заказов
 ```
-GET [Get Checked Orders](http://localhost:8080/orders/get)
+GET http://localhost:8080/orders/get
 ```
