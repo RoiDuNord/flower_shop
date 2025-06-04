@@ -8,14 +8,11 @@ import (
 	"server/config"
 	"server/models"
 	kfk "server/services/initReaderWriter"
-	"time"
 
 	"github.com/segmentio/kafka-go"
 )
 
 func Consumer(ctx context.Context, cfg config.KafkaParams, orderChan chan models.Order, unprocessedQty int) {
-	t := time.Now()
-
 	reader := kfk.InitReader(cfg)
 	slog.Info("kafka-orders is ready for consuming")
 	defer reader.Close()
@@ -27,17 +24,6 @@ func Consumer(ctx context.Context, cfg config.KafkaParams, orderChan chan models
 			continue
 		}
 	}
-
-	// for range unprocessedQty {
-	// 	go func() {
-	// 		if err := readAndProcessMessage(ctx, reader, orderChan); err != nil {
-	// 			slog.Error("Error processing order", "error", err)
-	// 		}
-	// 	}()
-	// }
-
-	dur := time.Since(t)
-	fmt.Println("Order", dur)
 }
 
 func consumeAndProcessMessage(ctx context.Context, reader *kafka.Reader, orderChan chan models.Order) error {
@@ -45,8 +31,6 @@ func consumeAndProcessMessage(ctx context.Context, reader *kafka.Reader, orderCh
 	if err != nil {
 		return fmt.Errorf("error reading order: %w", err)
 	}
-
-	fmt.Println("message", string(message.Value))
 
 	if err := reader.CommitMessages(ctx, message); err != nil {
 		return fmt.Errorf("error committing order: %w", err)
@@ -62,9 +46,7 @@ func orderToChannel(message []byte, orderChan chan models.Order) error {
 		return fmt.Errorf("error unmarshaling order: %w", err)
 	}
 
-	fmt.Println("len(order.BouquetsList)", len(order.BouquetsList))
 	orderChan <- order
 	slog.Info("Processed order", "order", order)
 	return nil
 }
-

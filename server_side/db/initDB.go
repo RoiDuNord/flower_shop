@@ -14,12 +14,10 @@ type Database struct {
 }
 
 func Init(params config.DBParams) (*Database, error) {
-	// Создаем базу, если ее нет
 	if err := createDatabaseIfNotExists(params); err != nil {
 		return nil, err
 	}
 
-	// Подключаемся к нужной базе (flower_shop)
 	psqlInfo := fmt.Sprintf(
 		"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
 		params.Host, params.Port, params.User, params.Password, params.Name, params.SSLMode,

@@ -38,8 +38,6 @@ func (om *OrderManager) updateBouquets(bouquets []models.Bouquet) ([]models.Bouq
 			slog.Info("flower updated", "name", fullFlowerName, "quantity", flower.Quantity, "cost", flower.Cost)
 			updateBouquetCost(om, bouquet)
 		}
-
-		fmt.Printf("%d bouquet total cost: %d\n", i+1, bouquet.BouquetCost)
 	}
 
 	return bouquets, nil

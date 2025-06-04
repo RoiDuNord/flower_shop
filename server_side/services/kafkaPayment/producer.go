@@ -38,7 +38,6 @@ func processPayment(ctx context.Context, number int, producer *kafka.Writer) err
 	if err = json.Unmarshal(fileData, &payment); err != nil {
 		return fmt.Errorf("error unmarshaling payment data: %w", err)
 	}
-	fmt.Println("payment", payment.OrderID)
 
 	if err = sendPaymentToKafka(ctx, payment, producer); err != nil {
 		return fmt.Errorf("error sending payment to Kafka: %w", err)

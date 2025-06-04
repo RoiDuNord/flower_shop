@@ -13,7 +13,6 @@ func ParseConfig() (Config, error) {
 
 	parseCount++
 	slog.Info("checking for config file", "file", "config.yaml", "call_number", parseCount)
-	// slog.Info("checking for config file", "file", "config.yaml")
 
 	if _, err := os.Stat("config.yaml"); os.IsNotExist(err) {
 		slog.Error("config file not found", "file", "config.yaml")

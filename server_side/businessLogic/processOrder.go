@@ -3,7 +3,6 @@ package businesslogic
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"log/slog"
 	"server/db"
 	"server/models"
@@ -44,8 +43,6 @@ var currentOrderID int
 
 func decodeOrder(data []byte) (models.Order, error) {
 	currentOrderID = newID()
-	fmt.Print("currentOrderID: ")
-	fmt.Println(currentOrderID)
 
 	bouquets, err := parseBouquets(data)
 	if err != nil {
@@ -56,23 +53,10 @@ func decodeOrder(data []byte) (models.Order, error) {
 	totalCost := calculateTotalCost(bouquets)
 	slog.Info("total cost calculated", "totalCost", totalCost)
 
-	// с этим кусочком надо поработать
-	// paymentInfo := getPayInfo(currentOrderID)
-
-	// isPaid := paymentInfo.IsPaid
-	// if isPaid {
-	// 	slog.Info("get payment", "orderID", currentOrderID)
-	// }
-	// с этим кусочком надо поработать
-
 	order := models.Order{
 		ID:           currentOrderID,
 		BouquetsList: bouquets,
 		OrderCost:    totalCost,
-		// Payment: models.Payment{
-		// 	IsPaid:    paymentInfo.IsPaid,
-		// 	PaymentID: paymentInfo.PaymentID,
-		// },
 	}
 
 	return order, nil

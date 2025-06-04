@@ -16,6 +16,5 @@ func (d *Database) GetDecorElementCost(tableName, columnName, value string) (int
 		return 0, fmt.Errorf("could not get cost '%s': %w", value, err)
 	}
 
-	// slog.Info(fmt.Sprintf("%s cost: %d", tableName[:len(tableName)-1], cost))
 	return cost, nil
 }

@@ -31,26 +31,3 @@ func main() {
 	}
 
 }
-
-// func main() {
-// 	cfg, err := config.ParseConfig()
-// 	if err != nil {
-// 		return
-// 	}
-
-// 	if cfg == (config.Config{}) {
-// 		slog.Warn("empty config")
-// 	}
-
-// 	logger, err := logger.Init(cfg.LogLevel)
-// 	if err != nil {
-// 		return
-// 	}
-// 	slog.Info("logger initialized")
-// 	defer logger.Close()
-// 	defer slog.Info("shutting down application")
-
-// 	if err := server.Run(cfg); err != nil {
-// 		return
-// 	}
-// }

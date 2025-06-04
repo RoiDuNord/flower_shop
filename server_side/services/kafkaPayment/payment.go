@@ -2,7 +2,6 @@ package kafkapayment
 
 import (
 	"context"
-	"fmt"
 	"log/slog"
 	"server/config"
 	kfk "server/services/initReaderWriter"
@@ -19,5 +18,5 @@ func SendPaymentToKafka(ctx context.Context, orderQty int) {
 
 	producer(ctx, orderQty, writer)
 
-	fmt.Println("Payment function exiting.")
+	slog.Info("SendPaymentToKafka function exiting")
 }

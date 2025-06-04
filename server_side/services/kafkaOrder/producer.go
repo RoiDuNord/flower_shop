@@ -38,7 +38,6 @@ func processOrder(ctx context.Context, number int, writer *kafka.Writer) error {
 	if err = json.Unmarshal(fileData, &order.BouquetsList); err != nil {
 		return fmt.Errorf("error unmarshaling order data for order %d: %w", number, err)
 	}
-	fmt.Println("len(bouquets)", len(order.BouquetsList))
 
 	if err = sendOrderToKafka(ctx, order, writer); err != nil {
 		return fmt.Errorf("error sending order %d to Kafka: %w", number, err)
@@ -89,4 +88,3 @@ func getFilePath(orderNumber int) (string, error) {
 	}
 	return filepath.Join(cwd, "services", "kafkaOrder", "orders", fmt.Sprintf("order%d.json", orderNumber)), nil
 }
-

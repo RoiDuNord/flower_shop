@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net/http"
 	"sync"
-	"time"
 
 	"log/slog"
 
@@ -114,12 +113,7 @@ func (s *Server) consumeOrders(wg *sync.WaitGroup, orderChan chan models.Order) 
 	slog.Info("consumeOrders started")
 	defer slog.Info("consumeOrders finished")
 
-	start := time.Now()
-
 	ko.Consumer(s.Ctx, cfg, orderChan, cap(orderChan))
-
-	duration := time.Since(start)
-	fmt.Printf("consumeOrders took %s\n", duration)
 }
 
 func (s *Server) consumePayments(wg *sync.WaitGroup, paymentChan chan models.Payment) {
@@ -133,12 +127,7 @@ func (s *Server) consumePayments(wg *sync.WaitGroup, paymentChan chan models.Pay
 	slog.Info("consumePayments started")
 	defer slog.Info("consumePayments finished")
 
-	start := time.Now()
-
 	kp.Consumer(s.Ctx, cfg, paymentChan, cap(paymentChan))
-
-	duration := time.Since(start)
-	fmt.Printf("consumePayments took %s\n", duration)
 }
 
 func processPayments(wg *sync.WaitGroup, paymentChan chan models.Payment, payments map[int]models.Payment) {
